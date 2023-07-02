@@ -1,0 +1,16 @@
+{
+ "singleQuote": true,
+ "trailingComma": "all",
+ "useTabs": false,
+ "tabWidth": 1,
+ "overrides": [
+  {
+   "files": "*.yaml, *.tsx",
+   "options": {
+    "tadWidth": 1,
+    "printWidth": 40,
+    "singleQuote": true
+   }
+  }
+ ]
+}

@@ -119,7 +119,7 @@ function index({ setSelectedPage }: Props) {
 
        <button
         type="submit"
-        className="mt-5 rounded-lg bg-secondary-500 px-20 py-3 transition duration-500 hover:text-white"
+        className="mt-5 rounded-lg bg-primary-300 px-20 py-3 text-white transition duration-500 hover:bg-secondary-500 hover:text-white"
        >
         Submit
        </button>
@@ -137,7 +137,7 @@ function index({ setSelectedPage }: Props) {
        visible: { opacity: 1, y: 0 },
       }}
      >
-      <div className="w-full before:absolute before:-bottom-20 before:-right-10 before:z-[-1] md:before:content-evolvetext">
+      <div className="w-full before:absolute before:-bottom-20 before:-right-10 before:z-[-1]">
        <img
         className="w-full"
         src={ContactUsPageGraphic}

@@ -98,7 +98,7 @@ function index({ setSelectedPage }: Props) {
      <div>
       {/* Title */}
       <div className="relative">
-       <div className="before:absolute before:-left-20 before:-top-20 before:z-[1] before:content-abstractwaves">
+       <div className="before:absolute before:-left-20 before:-top-20 before:z-[1]">
         <motion.div
          initial="hidden"
          whileInView="visible"
@@ -142,7 +142,7 @@ function index({ setSelectedPage }: Props) {
       </motion.div>
       {/* Button */}
       <div className="relative mt-16">
-       <div className="before:=bottom-20 before:absolute before:right-40 before:z-[-1] before:content-sparkles">
+       <div className="before:=bottom-20 before:absolute before:right-40 before:z-[-1]">
         <ActionButton setSelectedPage={setSelectedPage}>Join Now</ActionButton>
        </div>
       </div>

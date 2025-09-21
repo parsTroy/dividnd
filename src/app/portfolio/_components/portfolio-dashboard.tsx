@@ -5,6 +5,7 @@ import { api } from "~/trpc/react";
 import { PortfolioList } from "./portfolio-list";
 import { CreatePortfolioForm } from "./create-portfolio-form";
 import { PositionForm } from "./position-form";
+import { PortfolioAnalytics } from "./portfolio-analytics";
 
 export function PortfolioDashboard() {
   const [selectedPortfolioId, setSelectedPortfolioId] = useState<string | null>(null);
@@ -12,6 +13,10 @@ export function PortfolioDashboard() {
   const [showAddPosition, setShowAddPosition] = useState(false);
 
   const { data: portfolios, isLoading: portfoliosLoading } = api.portfolio.getAll.useQuery();
+  const { data: portfolioSummary } = api.position.getPortfolioSummary.useQuery(
+    { portfolioId: selectedPortfolioId! },
+    { enabled: !!selectedPortfolioId }
+  );
 
   // Auto-select the main portfolio or first portfolio
   React.useEffect(() => {
@@ -90,9 +95,28 @@ export function PortfolioDashboard() {
           <div className="lg:col-span-2">
             {selectedPortfolioId ? (
               <div className="space-y-6">
-                {/* Portfolio Summary Card */}
+                {/* Portfolio Analytics */}
+                {portfolioSummary && (
+                  <PortfolioAnalytics
+                    positions={portfolioSummary.positions.map(pos => ({
+                      id: pos.id,
+                      ticker: pos.ticker,
+                      shares: pos.shares,
+                      purchasePrice: pos.purchasePrice,
+                      currentPrice: pos.currentPrice ?? pos.purchasePrice,
+                      dividendYield: pos.dividendYield ?? undefined,
+                      purchaseDate: pos.purchaseDate,
+                    }))}
+                    totalInvested={portfolioSummary.summary.totalInvested}
+                    currentValue={portfolioSummary.summary.totalCurrentValue}
+                    unrealizedPnL={portfolioSummary.summary.totalUnrealizedGainLoss}
+                    annualDividends={portfolioSummary.summary.totalAnnualDividends}
+                  />
+                )}
+                
+                {/* Portfolio Positions Table */}
                 <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-                  <h3 className="text-lg font-semibold text-gray-900 mb-4">Portfolio Overview</h3>
+                  <h3 className="text-lg font-semibold text-gray-900 mb-4">Positions</h3>
                   <PositionList portfolioId={selectedPortfolioId} />
                 </div>
               </div>

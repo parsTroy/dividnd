@@ -252,6 +252,7 @@ export function PortfolioAnalytics({
               arcLinkLabelsColor={{ from: 'color' }}
               arcLabelsSkipAngle={10}
               arcLabelsTextColor={{ from: 'color', modifiers: [['darker', 2]] }}
+              arcLabel={(d) => formatCurrency(d.value)}
               defs={[
                 {
                   id: 'dots',
@@ -302,13 +303,13 @@ export function PortfolioAnalytics({
         {/* Position Performance Bar Chart */}
         <div className="bg-white p-6 rounded-xl border border-gray-200 shadow-sm">
           <h3 className="text-lg font-semibold text-gray-900 mb-4">Position Performance</h3>
-          <div className="h-80">
+          <div className="h-96">
             <ResponsiveBar
               data={performanceData}
-              keys={['pnlPercent']}
+              keys={['pnl']}
               indexBy="ticker"
-              margin={{ top: 50, right: 130, bottom: 50, left: 60 }}
-              padding={0.3}
+              margin={{ top: 50, right: 80, bottom: 50, left: 100 }}
+              padding={0.4}
               valueScale={{ type: 'linear' }}
               indexScale={{ type: 'band', round: true }}
               colors={{ scheme: 'nivo' }}
@@ -355,15 +356,17 @@ export function PortfolioAnalytics({
               }}
               axisLeft={{
                 tickSize: 5,
-                tickPadding: 5,
+                tickPadding: 8,
                 tickRotation: 0,
-                legend: 'P&L %',
+                legend: 'P&L ($)',
                 legendPosition: 'middle',
-                legendOffset: -40
+                legendOffset: -50,
+                format: (value) => formatCurrency(value)
               }}
-              labelSkipWidth={12}
-              labelSkipHeight={12}
+              labelSkipWidth={16}
+              labelSkipHeight={16}
               labelTextColor={{ from: 'color', modifiers: [['darker', 1.6]] }}
+              label={(d) => formatCurrency(d.value ?? 0)}
               animate={true}
             />
           </div>
@@ -390,7 +393,7 @@ export function PortfolioAnalytics({
             margin={{ top: 50, right: 110, bottom: 50, left: 60 }}
             xScale={{ type: 'point' }}
             yScale={{ type: 'linear', min: 'auto', max: 'auto', stacked: false, reverse: false }}
-            yFormat=" >-.2f"
+            yFormat={(value) => formatCurrency(Number(value))}
             curve="cardinal"
             axisTop={null}
             axisRight={null}
@@ -408,7 +411,8 @@ export function PortfolioAnalytics({
               tickRotation: 0,
               legend: 'Monthly Income ($)',
               legendOffset: -40,
-              legendPosition: 'middle'
+              legendPosition: 'middle',
+              format: (value) => formatCurrency(Number(value))
             }}
             pointSize={10}
             pointColor={{ theme: 'background' }}
@@ -481,7 +485,7 @@ export function PortfolioAnalytics({
                     min="0"
                   />
                   <p className="text-xs text-gray-500 mt-1">
-                    Annual equivalent: ${monthlyGoal ? (monthlyGoal * 12).toLocaleString() : '0'}
+                    Annual equivalent: {monthlyGoal ? formatCurrency(monthlyGoal * 12) : '$0.00'}
                   </p>
                 </div>
               </div>

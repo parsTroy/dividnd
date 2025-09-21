@@ -5,6 +5,7 @@ import { api } from "~/trpc/react";
 import { PortfolioList } from "./portfolio-list";
 import { CreatePortfolioForm } from "./create-portfolio-form";
 import { PositionForm } from "./position-form";
+import { RateLimitStatus } from "./rate-limit-status";
 
 export function PortfolioDashboard() {
   const [selectedPortfolioId, setSelectedPortfolioId] = useState<string | null>(null);
@@ -12,6 +13,13 @@ export function PortfolioDashboard() {
   const [showAddPosition, setShowAddPosition] = useState(false);
 
   const { data: portfolios, isLoading: portfoliosLoading } = api.portfolio.getAll.useQuery();
+  
+  const refreshPrices = api.stock.refreshPortfolioPrices.useMutation({
+    onSuccess: () => {
+      // Refetch portfolio data to show updated prices
+      window.location.reload();
+    },
+  });
 
   if (portfoliosLoading) {
     return (
@@ -27,12 +35,23 @@ export function PortfolioDashboard() {
       <div className="rounded-lg border border-gray-200 bg-white p-6">
         <div className="mb-4 flex items-center justify-between">
           <h2 className="text-xl font-semibold">Portfolios</h2>
-          <button
-            onClick={() => setShowCreatePortfolio(true)}
-            className="rounded-md bg-blue-600 px-4 py-2 text-white hover:bg-blue-700"
-          >
-            Create Portfolio
-          </button>
+          <div className="flex space-x-2">
+            {selectedPortfolioId && (
+              <button
+                onClick={() => refreshPrices.mutate({ portfolioId: selectedPortfolioId })}
+                disabled={refreshPrices.isPending}
+                className="rounded-md bg-green-600 px-4 py-2 text-white hover:bg-green-700 disabled:opacity-50"
+              >
+                {refreshPrices.isPending ? "Refreshing..." : "Refresh Prices"}
+              </button>
+            )}
+            <button
+              onClick={() => setShowCreatePortfolio(true)}
+              className="rounded-md bg-blue-600 px-4 py-2 text-white hover:bg-blue-700"
+            >
+              Create Portfolio
+            </button>
+          </div>
         </div>
         
         <PortfolioList 
@@ -58,6 +77,9 @@ export function PortfolioDashboard() {
           <PositionList portfolioId={selectedPortfolioId} />
         </div>
       )}
+
+      {/* API Status */}
+      <RateLimitStatus />
 
       {/* Modals */}
       {showCreatePortfolio && (

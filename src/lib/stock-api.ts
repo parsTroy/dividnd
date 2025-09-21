@@ -70,9 +70,8 @@ class StockAPIService {
     try {
       this.incrementRequest('alphaVantage');
       
-      const response = await fetch(
-        `https://www.alphavantage.co/query?function=GLOBAL_QUOTE&symbol=${symbol}&apikey=${this.alphaVantageKey}`
-      );
+      const url = `https://www.alphavantage.co/query?function=GLOBAL_QUOTE&symbol=${symbol}&apikey=${this.alphaVantageKey}`;
+      const response = await fetch(url);
       
       if (!response.ok) throw new Error('Alpha Vantage API error');
       
@@ -93,10 +92,9 @@ class StockAPIService {
         change: parseFloat(quote['09. change']),
         changePercent: parseFloat(quote['10. change percent'].replace('%', '')),
         lastUpdated: new Date(),
-        source: 'alpha_vantage'
+        source: 'alpha_vantage' as const
       };
     } catch (error) {
-      console.error('Alpha Vantage error:', error);
       return null;
     }
   }
@@ -148,16 +146,13 @@ class StockAPIService {
       try {
         const result = await apiCall();
         if (result) {
-          console.log(`Stock data fetched from ${result.source} for ${symbol}`);
           return result;
         }
       } catch (error) {
-        console.error('API call failed, trying next provider:', error);
         continue;
       }
     }
 
-    console.error(`All APIs failed for symbol: ${symbol}`);
     return null;
   }
 

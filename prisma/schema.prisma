@@ -64,9 +64,13 @@ model Portfolio {
   userId      String
   user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   name        String   @default("My Portfolio")
+  isMain      Boolean  @default(false)
   positions   Position[]
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
+
+  @@index([userId])
+  @@index([userId, isMain])
 }
 
 model Position {
@@ -81,4 +85,38 @@ model Position {
   dividendYield   Float?    // Manual input for MVP
   createdAt       DateTime  @default(now())
   updatedAt       DateTime  @updatedAt
+}
+
+// Cached stock data to avoid redundant API calls
+model StockData {
+  id              String    @id @default(cuid())
+  symbol          String    @unique
+  price           Float
+  change          Float
+  changePercent   Float
+  dividendYield   Float?
+  lastUpdated     DateTime
+  source          String    // 'alpha_vantage' or 'finnhub'
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  @@index([symbol])
+  @@index([lastUpdated])
+}
+
+// Cached dividend data
+model DividendData {
+  id              String    @id @default(cuid())
+  symbol          String    @unique
+  dividend        Float
+  exDate          String
+  recordDate      String
+  paymentDate     String
+  lastUpdated     DateTime
+  source          String    // 'alpha_vantage' or 'finnhub'
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  @@index([symbol])
+  @@index([lastUpdated])
 }

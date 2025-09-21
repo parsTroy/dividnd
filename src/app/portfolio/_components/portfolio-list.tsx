@@ -5,6 +5,7 @@ import { api } from "~/trpc/react";
 interface Portfolio {
   id: string;
   name: string;
+  isMain: boolean;
   createdAt: Date;
   _count: {
     positions: number;
@@ -26,10 +27,20 @@ export function PortfolioList({ portfolios, selectedPortfolioId, onSelectPortfol
     },
   });
 
+  const setMainPortfolio = api.portfolio.setMain.useMutation({
+    onSuccess: () => {
+      utils.portfolio.getAll.invalidate();
+    },
+  });
+
   const handleDelete = async (id: string) => {
     if (confirm("Are you sure you want to delete this portfolio? This will also delete all positions.")) {
       await deletePortfolio.mutateAsync({ id });
     }
+  };
+
+  const handleSetMain = async (id: string) => {
+    await setMainPortfolio.mutateAsync({ id });
   };
 
   if (portfolios.length === 0) {
@@ -41,7 +52,7 @@ export function PortfolioList({ portfolios, selectedPortfolioId, onSelectPortfol
   }
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+    <div className="space-y-3">
       {portfolios.map((portfolio) => (
         <div
           key={portfolio.id}
@@ -53,17 +64,38 @@ export function PortfolioList({ portfolios, selectedPortfolioId, onSelectPortfol
           onClick={() => onSelectPortfolio(portfolio.id)}
         >
           <div className="flex justify-between items-start mb-2">
-            <h3 className="font-semibold text-gray-900">{portfolio.name}</h3>
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                handleDelete(portfolio.id);
-              }}
-              className="text-red-500 hover:text-red-700 text-sm"
-              disabled={deletePortfolio.isPending}
-            >
-              Delete
-            </button>
+            <div className="flex items-center gap-2">
+              <h3 className="font-semibold text-gray-900">{portfolio.name}</h3>
+              {portfolio.isMain && (
+                <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                  Main
+                </span>
+              )}
+            </div>
+            <div className="flex gap-2">
+              {!portfolio.isMain && (
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleSetMain(portfolio.id);
+                  }}
+                  className="text-blue-500 hover:text-blue-700 text-sm"
+                  disabled={setMainPortfolio.isPending}
+                >
+                  Set as Main
+                </button>
+              )}
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleDelete(portfolio.id);
+                }}
+                className="text-red-500 hover:text-red-700 text-sm"
+                disabled={deletePortfolio.isPending}
+              >
+                Delete
+              </button>
+            </div>
           </div>
           <div className="text-sm text-gray-600">
             {portfolio._count.positions} position{portfolio._count.positions !== 1 ? 's' : ''}

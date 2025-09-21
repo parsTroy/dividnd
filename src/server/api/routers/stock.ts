@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { stockAPI } from "~/lib/stock-api";
+import { stockCache } from "~/lib/stock-cache";
 
 import {
   createTRPCRouter,
@@ -8,36 +9,27 @@ import {
 } from "~/server/api/trpc";
 
 export const stockRouter = createTRPCRouter({
-  // Get real-time stock data for a single symbol
+  // Get cached stock data for a single symbol (with smart caching)
   getStockData: publicProcedure
     .input(z.object({ symbol: z.string().toUpperCase() }))
     .query(async ({ input }) => {
-      const data = await stockAPI.getStockData(input.symbol);
+      const data = await stockCache.getStockData(input.symbol);
       return data;
     }),
 
-  // Get real-time stock data for multiple symbols
+  // Get cached stock data for multiple symbols
   getMultipleStockData: publicProcedure
     .input(z.object({ symbols: z.array(z.string().toUpperCase()) }))
     .query(async ({ input }) => {
-      const promises = input.symbols.map(symbol => 
-        stockAPI.getStockData(symbol).then(data => ({ symbol, data }))
-      );
-      
-      const results = await Promise.allSettled(promises);
-      
-      return results
-        .filter((result): result is PromiseFulfilledResult<{ symbol: string; data: any }> => 
-          result.status === 'fulfilled' && result.value.data !== null
-        )
-        .map(result => result.value);
+      const data = await stockCache.getMultipleStockData(input.symbols);
+      return data;
     }),
 
-  // Get dividend data for a symbol
+  // Get cached dividend data for a symbol
   getDividendData: publicProcedure
     .input(z.object({ symbol: z.string().toUpperCase() }))
     .query(async ({ input }) => {
-      const data = await stockAPI.getDividendData(input.symbol);
+      const data = await stockCache.getDividendData(input.symbol);
       return data;
     }),
 
@@ -47,7 +39,7 @@ export const stockRouter = createTRPCRouter({
       return stockAPI.getRateLimitStatus();
     }),
 
-  // Refresh stock prices for a portfolio (protected)
+  // Refresh stock prices for a portfolio (protected) - uses cached data
   refreshPortfolioPrices: protectedProcedure
     .input(z.object({ portfolioId: z.string() }))
     .mutation(async ({ ctx, input }) => {
@@ -64,36 +56,27 @@ export const stockRouter = createTRPCRouter({
       // Get unique tickers
       const tickers = [...new Set(positions.map(p => p.ticker))];
       
-      // Fetch stock data for all tickers
-      const stockDataPromises = tickers.map(ticker => 
-        stockAPI.getStockData(ticker).then(data => ({ ticker, data }))
-      );
-      
-      const stockDataResults = await Promise.allSettled(stockDataPromises);
+      // Fetch cached stock data for all tickers (this will use cache or fetch fresh)
+      const stockDataResults = await stockCache.getMultipleStockData(tickers);
       
       // Update positions with new prices
       let updatedCount = 0;
-      const updatePromises = stockDataResults
-        .filter((result): result is PromiseFulfilledResult<{ ticker: string; data: any }> => 
-          result.status === 'fulfilled' && result.value.data !== null
-        )
-        .map(async ({ value }) => {
-          const { ticker, data } = value;
-          
-          // Update all positions with this ticker
-          const updateResult = await ctx.db.position.updateMany({
-            where: { 
-              portfolioId: input.portfolioId,
-              ticker: ticker
-            },
-            data: {
-              currentPrice: data.price,
-              updatedAt: new Date()
-            }
-          });
-          
-          updatedCount += updateResult.count;
+      const updatePromises = stockDataResults.map(async (stockData) => {
+        // Update all positions with this ticker
+        const updateResult = await ctx.db.position.updateMany({
+          where: { 
+            portfolioId: input.portfolioId,
+            ticker: stockData.symbol
+          },
+          data: {
+            currentPrice: stockData.price,
+            dividendYield: stockData.dividendYield,
+            updatedAt: new Date()
+          }
         });
+        
+        updatedCount += updateResult.count;
+      });
 
       await Promise.all(updatePromises);
 
@@ -101,7 +84,28 @@ export const stockRouter = createTRPCRouter({
         success: true, 
         updated: updatedCount,
         totalPositions: positions.length,
-        tickersProcessed: tickers.length
+        tickersProcessed: tickers.length,
+        cachedData: stockDataResults.length
       };
+    }),
+
+  // Force refresh a specific stock (bypass cache)
+  forceRefreshStock: protectedProcedure
+    .input(z.object({ symbol: z.string().toUpperCase() }))
+    .mutation(async ({ input }) => {
+      const data = await stockCache.refreshStockData(input.symbol);
+      return data;
+    }),
+
+  // Get cache statistics
+  getCacheStats: protectedProcedure
+    .query(async () => {
+      return stockCache.getCacheStats();
+    }),
+
+  // Clean up old cache entries
+  cleanupCache: protectedProcedure
+    .mutation(async () => {
+      return stockCache.cleanupOldCache();
     }),
 });

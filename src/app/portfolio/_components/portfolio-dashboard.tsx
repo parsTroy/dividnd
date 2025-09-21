@@ -1,11 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import React, { useState } from "react";
 import { api } from "~/trpc/react";
 import { PortfolioList } from "./portfolio-list";
 import { CreatePortfolioForm } from "./create-portfolio-form";
 import { PositionForm } from "./position-form";
-import { RateLimitStatus } from "./rate-limit-status";
 
 export function PortfolioDashboard() {
   const [selectedPortfolioId, setSelectedPortfolioId] = useState<string | null>(null);
@@ -13,13 +12,15 @@ export function PortfolioDashboard() {
   const [showAddPosition, setShowAddPosition] = useState(false);
 
   const { data: portfolios, isLoading: portfoliosLoading } = api.portfolio.getAll.useQuery();
+
+  // Auto-select the main portfolio or first portfolio
+  React.useEffect(() => {
+    if (portfolios && portfolios.length > 0 && !selectedPortfolioId) {
+      const mainPortfolio = portfolios.find(p => p.isMain);
+      setSelectedPortfolioId(mainPortfolio?.id || portfolios[0]?.id || null);
+    }
+  }, [portfolios, selectedPortfolioId]);
   
-  const refreshPrices = api.stock.refreshPortfolioPrices.useMutation({
-    onSuccess: () => {
-      // Refetch portfolio data to show updated prices
-      window.location.reload();
-    },
-  });
 
   if (portfoliosLoading) {
     return (
@@ -30,56 +31,94 @@ export function PortfolioDashboard() {
   }
 
   return (
-    <div className="space-y-6">
-      {/* Portfolio Management */}
-      <div className="rounded-lg border border-gray-200 bg-white p-6">
-        <div className="mb-4 flex items-center justify-between">
-          <h2 className="text-xl font-semibold">Portfolios</h2>
-          <div className="flex space-x-2">
-            {selectedPortfolioId && (
+    <div className="min-h-screen bg-gray-50">
+      {/* Header Section */}
+      <div className="bg-white shadow-sm border-b">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex items-center justify-between h-16">
+            <div>
+              <h1 className="text-2xl font-bold text-gray-900">Portfolio Dashboard</h1>
+              <p className="text-sm text-gray-600">Track your dividend investments</p>
+            </div>
+            <div className="flex space-x-3">
               <button
-                onClick={() => refreshPrices.mutate({ portfolioId: selectedPortfolioId })}
-                disabled={refreshPrices.isPending}
-                className="rounded-md bg-green-600 px-4 py-2 text-white hover:bg-green-700 disabled:opacity-50"
+                onClick={() => setShowCreatePortfolio(true)}
+                className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
               >
-                {refreshPrices.isPending ? "Refreshing..." : "Refresh Prices"}
+                <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                </svg>
+                New Portfolio
               </button>
-            )}
-            <button
-              onClick={() => setShowCreatePortfolio(true)}
-              className="rounded-md bg-blue-600 px-4 py-2 text-white hover:bg-blue-700"
-            >
-              Create Portfolio
-            </button>
+              {selectedPortfolioId && (
+                <button
+                  onClick={() => setShowAddPosition(true)}
+                  className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition-colors"
+                >
+                  <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                  </svg>
+                  Add Position
+                </button>
+              )}
+            </div>
           </div>
         </div>
-        
-        <PortfolioList 
-          portfolios={portfolios ?? []}
-          selectedPortfolioId={selectedPortfolioId}
-          onSelectPortfolio={setSelectedPortfolioId}
-        />
       </div>
 
-      {/* Position Management */}
-      {selectedPortfolioId && (
-        <div className="rounded-lg border border-gray-200 bg-white p-6">
-          <div className="mb-4 flex items-center justify-between">
-            <h2 className="text-xl font-semibold">Positions</h2>
-            <button
-              onClick={() => setShowAddPosition(true)}
-              className="rounded-md bg-green-600 px-4 py-2 text-white hover:bg-green-700"
-            >
-              Add Position
-            </button>
+      {/* Main Content */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          {/* Portfolio Selection Sidebar */}
+          <div className="lg:col-span-1">
+            <div className="bg-white rounded-lg shadow-sm border border-gray-200">
+              <div className="p-6 border-b border-gray-200">
+                <h2 className="text-lg font-semibold text-gray-900">Your Portfolios</h2>
+                <p className="text-sm text-gray-600 mt-1">Select a portfolio to view positions</p>
+              </div>
+              <div className="p-6">
+                <PortfolioList 
+                  portfolios={portfolios ?? []}
+                  selectedPortfolioId={selectedPortfolioId}
+                  onSelectPortfolio={setSelectedPortfolioId}
+                />
+              </div>
+            </div>
           </div>
-          
-          <PositionList portfolioId={selectedPortfolioId} />
-        </div>
-      )}
 
-      {/* API Status */}
-      <RateLimitStatus />
+          {/* Main Content Area */}
+          <div className="lg:col-span-2">
+            {selectedPortfolioId ? (
+              <div className="space-y-6">
+                {/* Portfolio Summary Card */}
+                <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+                  <h3 className="text-lg font-semibold text-gray-900 mb-4">Portfolio Overview</h3>
+                  <PositionList portfolioId={selectedPortfolioId} />
+                </div>
+              </div>
+            ) : (
+              <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-12 text-center">
+                <svg className="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                </svg>
+                <h3 className="mt-4 text-lg font-medium text-gray-900">No Portfolio Selected</h3>
+                <p className="mt-2 text-sm text-gray-500">Choose a portfolio from the sidebar to view your positions and performance.</p>
+                <div className="mt-6">
+                  <button
+                    onClick={() => setShowCreatePortfolio(true)}
+                    className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                  >
+                    <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                    </svg>
+                    Create Your First Portfolio
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
 
       {/* Modals */}
       {showCreatePortfolio && (

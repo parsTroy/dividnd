@@ -84,9 +84,9 @@ export const portfolioRouter = createTRPCRouter({
     .mutation(async ({ ctx, input }) => {
       // First, unset all other portfolios as main
       await ctx.db.portfolio.updateMany({
-        where: { 
+        where: {
           userId: ctx.session.user.id,
-          isMain: true 
+          isMain: true
         },
         data: { isMain: false }
       });
@@ -98,6 +98,26 @@ export const portfolioRouter = createTRPCRouter({
           userId: ctx.session.user.id,
         },
         data: { isMain: true },
+      });
+    }),
+
+  // Update monthly dividend goal for a portfolio
+  updateMonthlyDividendGoal: protectedProcedure
+    .input(z.object({
+      id: z.string(),
+      monthlyDividendGoal: z.number().optional(),
+    }))
+    .mutation(async ({ ctx, input }) => {
+      return ctx.db.portfolio.update({
+        where: {
+          id: input.id,
+          userId: ctx.session.user.id,
+        },
+        data: {
+          monthlyDividendGoal: input.monthlyDividendGoal,
+          // Auto-calculate annual goal (monthly * 12)
+          annualDividendGoal: input.monthlyDividendGoal ? input.monthlyDividendGoal * 12 : null,
+        },
       });
     }),
 

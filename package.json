@@ -22,6 +22,11 @@
   },
   "dependencies": {
     "@auth/prisma-adapter": "^2.7.2",
+    "@nivo/bar": "^0.99.0",
+    "@nivo/calendar": "^0.99.0",
+    "@nivo/core": "^0.99.0",
+    "@nivo/line": "^0.99.0",
+    "@nivo/pie": "^0.99.0",
     "@prisma/client": "^6.5.0",
     "@t3-oss/env-nextjs": "^0.12.0",
     "@tanstack/react-query": "^5.69.0",

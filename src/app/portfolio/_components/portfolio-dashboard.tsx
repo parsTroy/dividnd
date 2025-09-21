@@ -4,13 +4,19 @@ import React, { useState } from "react";
 import { api } from "~/trpc/react";
 import { PortfolioList } from "./portfolio-list";
 import { CreatePortfolioForm } from "./create-portfolio-form";
+import { EditPortfolioForm } from "./edit-portfolio-form";
 import { PositionForm } from "./position-form";
+import { EditPositionForm } from "./edit-position-form";
 import { PortfolioAnalytics } from "./portfolio-analytics";
 
 export function PortfolioDashboard() {
   const [selectedPortfolioId, setSelectedPortfolioId] = useState<string | null>(null);
   const [showCreatePortfolio, setShowCreatePortfolio] = useState(false);
+  const [showEditPortfolio, setShowEditPortfolio] = useState(false);
   const [showAddPosition, setShowAddPosition] = useState(false);
+  const [showEditPosition, setShowEditPosition] = useState(false);
+  const [editingPosition, setEditingPosition] = useState<any>(null);
+  const [editingPortfolio, setEditingPortfolio] = useState<any>(null);
 
   const { data: portfolios, isLoading: portfoliosLoading } = api.portfolio.getAll.useQuery();
   const { data: portfolioSummary } = api.position.getPortfolioSummary.useQuery(
@@ -82,11 +88,15 @@ export function PortfolioDashboard() {
                 <p className="text-sm text-gray-600 mt-1">Select a portfolio to view positions</p>
               </div>
               <div className="p-6">
-                <PortfolioList 
-                  portfolios={portfolios ?? []}
-                  selectedPortfolioId={selectedPortfolioId}
-                  onSelectPortfolio={setSelectedPortfolioId}
-                />
+                    <PortfolioList
+                      portfolios={portfolios ?? []}
+                      selectedPortfolioId={selectedPortfolioId}
+                      onSelectPortfolio={setSelectedPortfolioId}
+                      onEditPortfolio={(portfolio) => {
+                        setEditingPortfolio(portfolio);
+                        setShowEditPortfolio(true);
+                      }}
+                    />
               </div>
             </div>
           </div>
@@ -111,13 +121,22 @@ export function PortfolioDashboard() {
                     currentValue={portfolioSummary.summary.totalCurrentValue}
                     unrealizedPnL={portfolioSummary.summary.totalUnrealizedGainLoss}
                     annualDividends={portfolioSummary.summary.totalAnnualDividends}
+                    portfolioId={selectedPortfolioId}
+                    monthlyDividendGoal={portfolioSummary.portfolio.monthlyDividendGoal}
+                    annualDividendGoal={portfolioSummary.portfolio.annualDividendGoal}
                   />
                 )}
                 
                 {/* Portfolio Positions Table */}
                 <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
                   <h3 className="text-lg font-semibold text-gray-900 mb-4">Positions</h3>
-                  <PositionList portfolioId={selectedPortfolioId} />
+                  <PositionList 
+                    portfolioId={selectedPortfolioId} 
+                    onEditPosition={(position) => {
+                      setEditingPosition(position);
+                      setShowEditPosition(true);
+                    }}
+                  />
                 </div>
               </div>
             ) : (
@@ -167,13 +186,51 @@ export function PortfolioDashboard() {
           }}
         />
       )}
+
+      {showEditPortfolio && editingPortfolio && (
+        <EditPortfolioForm
+          portfolio={editingPortfolio}
+          onClose={() => {
+            setShowEditPortfolio(false);
+            setEditingPortfolio(null);
+          }}
+          onSuccess={() => {
+            setShowEditPortfolio(false);
+            setEditingPortfolio(null);
+            void api.useUtils().portfolio.getAll.invalidate();
+          }}
+        />
+      )}
+
+      {showEditPosition && editingPosition && (
+        <EditPositionForm
+          position={editingPosition}
+          onClose={() => {
+            setShowEditPosition(false);
+            setEditingPosition(null);
+          }}
+          onSuccess={() => {
+            setShowEditPosition(false);
+            setEditingPosition(null);
+            if (selectedPortfolioId) {
+              void api.useUtils().position.getPortfolioSummary.invalidate({ portfolioId: selectedPortfolioId });
+            }
+          }}
+        />
+      )}
     </div>
   );
 }
 
-function PositionList({ portfolioId }: { portfolioId: string }) {
+function PositionList({ portfolioId, onEditPosition }: { portfolioId: string; onEditPosition: (position: any) => void }) {
   const { data: portfolioData, isLoading } = api.position.getPortfolioSummary.useQuery({ 
     portfolioId 
+  });
+
+  const deletePosition = api.position.delete.useMutation({
+    onSuccess: () => {
+      void api.useUtils().position.getPortfolioSummary.invalidate({ portfolioId });
+    },
   });
 
   if (isLoading) {
@@ -247,6 +304,9 @@ function PositionList({ portfolioId }: { portfolioId: string }) {
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Annual Dividends
                 </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Actions
+                </th>
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
@@ -276,6 +336,27 @@ function PositionList({ portfolioId }: { portfolioId: string }) {
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                       ${annualDividends.toFixed(2)}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                      <div className="flex space-x-2">
+                        <button
+                          onClick={() => onEditPosition(position)}
+                          className="text-blue-600 hover:text-blue-900 font-medium"
+                        >
+                          Edit
+                        </button>
+                        <button
+                          onClick={() => {
+                            if (confirm(`Are you sure you want to delete this position (${position.ticker})?`)) {
+                              deletePosition.mutate({ id: position.id });
+                            }
+                          }}
+                          className="text-red-600 hover:text-red-900 font-medium"
+                          disabled={deletePosition.isPending}
+                        >
+                          {deletePosition.isPending ? 'Deleting...' : 'Delete'}
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 );

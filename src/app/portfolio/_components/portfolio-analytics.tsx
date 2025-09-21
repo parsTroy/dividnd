@@ -1,22 +1,10 @@
 "use client";
 
-import React from "react";
-import {
-  PieChart,
-  Pie,
-  Cell,
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer,
-  LineChart,
-  Line,
-  Area,
-  AreaChart,
-} from "recharts";
+import React, { useState } from 'react';
+import { ResponsivePie } from '@nivo/pie';
+import { ResponsiveBar } from '@nivo/bar';
+import { ResponsiveLine } from '@nivo/line';
+import { api } from "~/trpc/react";
 
 interface Position {
   id: string;
@@ -34,18 +22,13 @@ interface PortfolioAnalyticsProps {
   currentValue: number;
   unrealizedPnL: number;
   annualDividends: number;
+  portfolioId: string;
+  monthlyDividendGoal?: number | null;
+  annualDividendGoal?: number | null;
 }
 
-const COLORS = [
-  "#3B82F6", // Blue
-  "#10B981", // Green
-  "#F59E0B", // Yellow
-  "#EF4444", // Red
-  "#8B5CF6", // Purple
-  "#06B6D4", // Cyan
-  "#F97316", // Orange
-  "#84CC16", // Lime
-];
+const formatCurrency = (value: number) => `$${value.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+const formatPercentage = (value: number) => `${value.toFixed(2)}%`;
 
 export function PortfolioAnalytics({
   positions,
@@ -53,266 +36,463 @@ export function PortfolioAnalytics({
   currentValue,
   unrealizedPnL,
   annualDividends,
+  portfolioId,
+  monthlyDividendGoal,
+  annualDividendGoal,
 }: PortfolioAnalyticsProps) {
+  const [showGoalModal, setShowGoalModal] = useState(false);
+  const [monthlyGoal, setMonthlyGoal] = useState(monthlyDividendGoal || 0);
+
+  const utils = api.useUtils();
+  const updateGoals = api.portfolio.updateMonthlyDividendGoal.useMutation({
+    onSuccess: () => {
+      utils.portfolio.getAll.invalidate();
+      setShowGoalModal(false);
+    },
+  });
+
+  const handleSaveGoals = () => {
+    updateGoals.mutate({
+      id: portfolioId,
+      monthlyDividendGoal: monthlyGoal || undefined,
+    });
+  };
+
   // Calculate portfolio allocation data
   const allocationData = positions.map((position, index) => ({
-    name: position.ticker,
+    id: position.ticker,
+    label: position.ticker,
     value: position.shares * position.currentPrice,
-    color: COLORS[index % COLORS.length],
-    percentage: ((position.shares * position.currentPrice) / currentValue) * 100,
-  }));
+    color: `hsl(${(index * 137.5) % 360}, 70%, 50%)`,
+  })).filter(data => data.value > 0);
 
-  // Calculate performance data (simplified - in real app, you'd want historical data)
-  const performanceData = positions.map((position) => {
-    const marketValue = position.shares * position.currentPrice;
+  // Calculate performance data
+  const performanceData = positions.map(position => {
     const costBasis = position.shares * position.purchasePrice;
-    const gainLoss = marketValue - costBasis;
-    const gainLossPercent = (gainLoss / costBasis) * 100;
-
+    const marketValue = position.shares * position.currentPrice;
+    const pnl = marketValue - costBasis;
+    const pnlPercent = costBasis > 0 ? (pnl / costBasis) * 100 : 0;
     return {
       ticker: position.ticker,
-      marketValue,
-      costBasis,
-      gainLoss,
-      gainLossPercent,
-      shares: position.shares,
+      pnl: pnl,
+      pnlPercent: pnlPercent,
     };
   });
 
-  // Calculate dividend yield data
-  const dividendData = positions
-    .filter((position) => position.dividendYield && position.dividendYield > 0)
-    .map((position) => ({
-      ticker: position.ticker,
-      yield: position.dividendYield || 0,
-      annualDividend: (position.shares * position.currentPrice * (position.dividendYield || 0)) / 100,
-    }))
-    .sort((a, b) => b.yield - a.yield);
+  // Calculate dividend income over time (monthly projections)
+  const currentMonth = new Date().getMonth();
+  const monthlyDividendIncome = annualDividends / 12;
+  
+  // For now, use simple monthly projections
+  // TODO: Implement real historical dividend data fetching
+  const dividendTimelineData = Array.from({ length: 12 }, (_, i) => {
+    const month = (currentMonth + i) % 12;
+    const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    return {
+      month: monthNames[month] as string,
+      actual: monthlyDividendIncome,
+      goal: monthlyDividendGoal || 0,
+    };
+  });
 
-  // Calculate portfolio metrics
-  const totalGainLoss = unrealizedPnL;
-  const totalGainLossPercent = totalInvested > 0 ? (totalGainLoss / totalInvested) * 100 : 0;
+  const totalGainLossPercent = totalInvested > 0 ? (unrealizedPnL / totalInvested) * 100 : 0;
   const portfolioDividendYield = currentValue > 0 ? (annualDividends / currentValue) * 100 : 0;
+
+  // Calculate goal progress
+  const monthlyProgress = monthlyDividendGoal ? (monthlyDividendIncome / monthlyDividendGoal) * 100 : 0;
+  const annualProgress = annualDividendGoal ? (annualDividends / annualDividendGoal) * 100 : 0;
 
   return (
     <div className="space-y-6">
       {/* Key Metrics Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="bg-white p-4 rounded-lg border border-gray-200">
-          <div className="text-sm font-medium text-gray-600">Total Return</div>
-          <div className={`text-2xl font-bold ${totalGainLoss >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-            {totalGainLoss >= 0 ? '+' : ''}${totalGainLoss.toLocaleString()}
-          </div>
-          <div className={`text-sm ${totalGainLossPercent >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-            {totalGainLossPercent >= 0 ? '+' : ''}{totalGainLossPercent.toFixed(2)}%
-          </div>
-        </div>
-
-        <div className="bg-white p-4 rounded-lg border border-gray-200">
-          <div className="text-sm font-medium text-gray-600">Portfolio Yield</div>
-          <div className="text-2xl font-bold text-blue-600">
-            {portfolioDividendYield.toFixed(2)}%
-          </div>
-          <div className="text-sm text-gray-600">
-            ${annualDividends.toLocaleString()}/year
+        <div className="bg-gradient-to-br from-green-50 to-green-100 p-6 rounded-xl border border-green-200">
+          <div className="flex items-center justify-between">
+            <div>
+              <div className="text-sm font-medium text-green-700">Total Return</div>
+              <div className={`text-2xl font-bold ${unrealizedPnL >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                {unrealizedPnL >= 0 ? '+' : ''}{formatCurrency(unrealizedPnL)}
+              </div>
+              <div className="text-sm text-green-600">{formatPercentage(totalGainLossPercent)}</div>
+            </div>
+            <div className="w-12 h-12 bg-green-200 rounded-full flex items-center justify-center">
+              <svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
+              </svg>
+            </div>
           </div>
         </div>
 
-        <div className="bg-white p-4 rounded-lg border border-gray-200">
-          <div className="text-sm font-medium text-gray-600">Positions</div>
-          <div className="text-2xl font-bold text-gray-900">
-            {positions.length}
-          </div>
-          <div className="text-sm text-gray-600">
-            {positions.length === 1 ? 'position' : 'positions'}
+        <div className="bg-gradient-to-br from-blue-50 to-blue-100 p-6 rounded-xl border border-blue-200">
+          <div className="flex items-center justify-between">
+            <div>
+              <div className="text-sm font-medium text-blue-700">Portfolio Yield</div>
+              <div className="text-2xl font-bold text-blue-600">{formatPercentage(portfolioDividendYield)}</div>
+              <div className="text-sm text-blue-600">{formatCurrency(annualDividends)}/year</div>
+            </div>
+            <div className="w-12 h-12 bg-blue-200 rounded-full flex items-center justify-center">
+              <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
+              </svg>
+            </div>
           </div>
         </div>
 
-        <div className="bg-white p-4 rounded-lg border border-gray-200">
-          <div className="text-sm font-medium text-gray-600">Avg. Position Size</div>
-          <div className="text-2xl font-bold text-gray-900">
-            ${(currentValue / positions.length).toLocaleString()}
+        <div className="bg-gradient-to-br from-purple-50 to-purple-100 p-6 rounded-xl border border-purple-200">
+          <div className="flex items-center justify-between">
+            <div>
+              <div className="text-sm font-medium text-purple-700">Positions</div>
+              <div className="text-2xl font-bold text-purple-600">{positions.length}</div>
+              <div className="text-sm text-purple-600">active positions</div>
+            </div>
+            <div className="w-12 h-12 bg-purple-200 rounded-full flex items-center justify-center">
+              <svg className="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+              </svg>
+            </div>
           </div>
-          <div className="text-sm text-gray-600">
-            per position
+        </div>
+
+        <div className="bg-gradient-to-br from-orange-50 to-orange-100 p-6 rounded-xl border border-orange-200">
+          <div className="flex items-center justify-between">
+            <div>
+              <div className="text-sm font-medium text-orange-700">Annual Income from Dividends</div>
+              <div className="text-2xl font-bold text-orange-600">
+                {formatCurrency(annualDividends)}
+              </div>
+              <div className="text-sm text-orange-600">projected yearly</div>
+            </div>
+            <div className="w-12 h-12 bg-orange-200 rounded-full flex items-center justify-center">
+              <svg className="w-6 h-6 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
+              </svg>
+            </div>
           </div>
+        </div>
+      </div>
+
+      {/* Dividend Goals Section */}
+      <div className="bg-gradient-to-r from-indigo-50 to-purple-50 p-6 rounded-xl border border-indigo-200">
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-lg font-semibold text-gray-900">Dividend Income Goals</h3>
+          <button
+            onClick={() => setShowGoalModal(true)}
+            className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors text-sm font-medium"
+          >
+            Set Goals
+          </button>
+        </div>
+        
+        <div className="space-y-4">
+          <div>
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-sm font-medium text-gray-700">Monthly Goal</span>
+              <span className="text-sm text-gray-600">
+                {monthlyDividendGoal ? formatCurrency(monthlyDividendGoal) : 'Not set'}
+              </span>
+            </div>
+            <div className="w-full bg-gray-200 rounded-full h-3">
+              <div 
+                className="bg-indigo-600 h-3 rounded-full transition-all duration-500"
+                style={{ width: `${Math.min(monthlyProgress, 100)}%` }}
+              ></div>
+            </div>
+            <div className="text-xs text-gray-500 mt-1">
+              {monthlyDividendGoal ? `${monthlyProgress.toFixed(1)}% of goal` : 'Set a monthly goal to track progress'}
+            </div>
+          </div>
+          
+          {monthlyDividendGoal && (
+            <div className="bg-white/50 p-3 rounded-lg border border-indigo-200">
+              <div className="flex items-center justify-between">
+                <span className="text-sm font-medium text-gray-700">Annual Equivalent</span>
+                <span className="text-lg font-semibold text-indigo-700">
+                  {formatCurrency(monthlyDividendGoal * 12)}
+                </span>
+              </div>
+              <div className="text-xs text-gray-500 mt-1">
+                Based on monthly goal of {formatCurrency(monthlyDividendGoal)}
+              </div>
+            </div>
+          )}
         </div>
       </div>
 
       {/* Charts Grid */}
       <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
         {/* Portfolio Allocation Pie Chart */}
-        <div className="bg-white p-6 rounded-lg border border-gray-200">
+        <div className="bg-white p-6 rounded-xl border border-gray-200 shadow-sm">
           <h3 className="text-lg font-semibold text-gray-900 mb-4">Portfolio Allocation</h3>
           <div className="h-80">
-            <ResponsiveContainer width="100%" height="100%">
-              <PieChart>
-                <Pie
-                  data={allocationData}
-                  cx="50%"
-                  cy="50%"
-                  labelLine={false}
-                  label={({ name, percentage }) => `${name} (${(percentage as number).toFixed(1)}%)`}
-                  outerRadius={80}
-                  fill="#8884d8"
-                  dataKey="value"
-                >
-                  {allocationData.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={entry.color} />
-                  ))}
-                </Pie>
-                <Tooltip formatter={(value) => [`$${Number(value).toLocaleString()}`, 'Value']} />
-              </PieChart>
-            </ResponsiveContainer>
+            <ResponsivePie
+              data={allocationData}
+              margin={{ top: 40, right: 80, bottom: 80, left: 80 }}
+              innerRadius={0.5}
+              padAngle={0.7}
+              cornerRadius={3}
+              activeOuterRadiusOffset={8}
+              colors={{ scheme: 'nivo' }}
+              borderWidth={1}
+              borderColor={{ from: 'color', modifiers: [['darker', 0.2]] }}
+              arcLinkLabelsSkipAngle={10}
+              arcLinkLabelsTextColor="#333333"
+              arcLinkLabelsThickness={2}
+              arcLinkLabelsColor={{ from: 'color' }}
+              arcLabelsSkipAngle={10}
+              arcLabelsTextColor={{ from: 'color', modifiers: [['darker', 2]] }}
+              defs={[
+                {
+                  id: 'dots',
+                  type: 'patternDots',
+                  background: 'inherit',
+                  color: 'rgba(255, 255, 255, 0.3)',
+                  size: 4,
+                  padding: 1,
+                  stagger: true
+                },
+                {
+                  id: 'lines',
+                  type: 'patternLines',
+                  background: 'inherit',
+                  color: 'rgba(255, 255, 255, 0.3)',
+                  rotation: -45,
+                  lineWidth: 6,
+                  spacing: 10
+                }
+              ]}
+              fill={[
+                { match: { id: 'ruby' }, id: 'dots' },
+                { match: { id: 'c' }, id: 'dots' },
+                { match: { id: 'go' }, id: 'lines' },
+                { match: { id: 'python' }, id: 'lines' }
+              ]}
+              legends={[
+                {
+                  anchor: 'bottom',
+                  direction: 'row',
+                  justify: false,
+                  translateX: 0,
+                  translateY: 56,
+                  itemsSpacing: 0,
+                  itemWidth: 100,
+                  itemHeight: 18,
+                  itemTextColor: '#999',
+                  itemDirection: 'left-to-right',
+                  itemOpacity: 1,
+                  symbolSize: 18,
+                  symbolShape: 'circle'
+                }
+              ]}
+            />
           </div>
         </div>
 
-        {/* Performance Bar Chart */}
-        <div className="bg-white p-6 rounded-lg border border-gray-200">
+        {/* Position Performance Bar Chart */}
+        <div className="bg-white p-6 rounded-xl border border-gray-200 shadow-sm">
           <h3 className="text-lg font-semibold text-gray-900 mb-4">Position Performance</h3>
           <div className="h-80">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={performanceData}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="ticker" />
-                <YAxis />
-                <Tooltip 
-                  formatter={(value, name) => [
-                    name === 'gainLoss' ? `$${Number(value).toLocaleString()}` : `${Number(value).toFixed(2)}%`,
-                    name === 'gainLoss' ? 'Gain/Loss' : 'Return %'
-                  ]}
-                />
-                <Bar dataKey="gainLossPercent" fill="#3B82F6" />
-              </BarChart>
-            </ResponsiveContainer>
+            <ResponsiveBar
+              data={performanceData}
+              keys={['pnlPercent']}
+              indexBy="ticker"
+              margin={{ top: 50, right: 130, bottom: 50, left: 60 }}
+              padding={0.3}
+              valueScale={{ type: 'linear' }}
+              indexScale={{ type: 'band', round: true }}
+              colors={{ scheme: 'nivo' }}
+              defs={[
+                {
+                  id: 'dots',
+                  type: 'patternDots',
+                  background: 'inherit',
+                  color: '#38bcb2',
+                  size: 4,
+                  padding: 1,
+                  stagger: true
+                },
+                {
+                  id: 'lines',
+                  type: 'patternLines',
+                  background: 'inherit',
+                  color: '#eed312',
+                  rotation: -45,
+                  lineWidth: 6,
+                  spacing: 10
+                }
+              ]}
+              fill={[
+                {
+                  match: { id: 'fries' },
+                  id: 'lines'
+                },
+                {
+                  match: { id: 'sandwich' },
+                  id: 'lines'
+                }
+              ]}
+              borderColor={{ from: 'color', modifiers: [['darker', 1.6]] }}
+              axisTop={null}
+              axisRight={null}
+              axisBottom={{
+                tickSize: 5,
+                tickPadding: 5,
+                tickRotation: 0,
+                legend: 'Ticker',
+                legendPosition: 'middle',
+                legendOffset: 32
+              }}
+              axisLeft={{
+                tickSize: 5,
+                tickPadding: 5,
+                tickRotation: 0,
+                legend: 'P&L %',
+                legendPosition: 'middle',
+                legendOffset: -40
+              }}
+              labelSkipWidth={12}
+              labelSkipHeight={12}
+              labelTextColor={{ from: 'color', modifiers: [['darker', 1.6]] }}
+              animate={true}
+            />
           </div>
         </div>
+      </div>
 
-        {/* Dividend Yield Chart */}
-        {dividendData.length > 0 && (
-          <div className="bg-white p-6 rounded-lg border border-gray-200">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">Dividend Yields</h3>
-            <div className="h-80">
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={dividendData}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="ticker" />
-                  <YAxis />
-                  <Tooltip 
-                    formatter={(value, name) => [
-                      `${Number(value).toFixed(2)}%`,
-                      'Dividend Yield'
-                    ]}
+      {/* Dividend Income Timeline - Full Width */}
+      <div className="bg-white p-6 rounded-xl border border-gray-200 shadow-sm">
+        <h3 className="text-lg font-semibold text-gray-900 mb-4">Anticipated Dividend Income Timeline</h3>
+        <div className="h-80">
+          <ResponsiveLine
+            data={[
+              {
+                id: 'Actual Income',
+                data: dividendTimelineData.map(d => ({ x: d.month, y: d.actual })),
+                color: '#3B82F6'
+              },
+              {
+                id: 'Goal',
+                data: dividendTimelineData.map(d => ({ x: d.month, y: d.goal })),
+                color: '#10B981'
+              }
+            ]}
+            margin={{ top: 50, right: 110, bottom: 50, left: 60 }}
+            xScale={{ type: 'point' }}
+            yScale={{ type: 'linear', min: 'auto', max: 'auto', stacked: false, reverse: false }}
+            yFormat=" >-.2f"
+            curve="cardinal"
+            axisTop={null}
+            axisRight={null}
+            axisBottom={{
+              tickSize: 5,
+              tickPadding: 5,
+              tickRotation: 0,
+              legend: 'Month',
+              legendOffset: 36,
+              legendPosition: 'middle'
+            }}
+            axisLeft={{
+              tickSize: 5,
+              tickPadding: 5,
+              tickRotation: 0,
+              legend: 'Monthly Income ($)',
+              legendOffset: -40,
+              legendPosition: 'middle'
+            }}
+            pointSize={10}
+            pointColor={{ theme: 'background' }}
+            pointBorderWidth={2}
+            pointBorderColor={{ from: 'serieColor' }}
+            pointLabelYOffset={-12}
+            useMesh={true}
+            colors={{ scheme: 'nivo' }}
+            lineWidth={3}
+            enableSlices="x"
+            legends={[
+              {
+                anchor: 'bottom-right',
+                direction: 'column',
+                justify: false,
+                translateX: 100,
+                translateY: 0,
+                itemsSpacing: 0,
+                itemDirection: 'left-to-right',
+                itemWidth: 80,
+                itemHeight: 20,
+                itemOpacity: 0.75,
+                symbolSize: 12,
+                symbolShape: 'circle',
+                effects: [
+                  {
+                    on: 'hover',
+                    style: {
+                      itemBackground: 'rgba(0, 0, 0, .03)',
+                      itemOpacity: 1
+                    }
+                  }
+                ]
+              }
+            ]}
+          />
+        </div>
+      </div>
+
+      {/* Goal Setting Modal */}
+      {showGoalModal && (
+        <div className="fixed inset-0 z-50 overflow-y-auto">
+          <div className="fixed inset-0 backdrop-blur-sm" onClick={() => setShowGoalModal(false)} />
+          <div className="flex min-h-full items-center justify-center p-4">
+            <div className="relative bg-white rounded-xl shadow-xl w-full max-w-md">
+              <div className="flex items-center justify-between p-6 border-b border-gray-200">
+                <h2 className="text-xl font-semibold text-gray-900">Set Dividend Goals</h2>
+                <button
+                  onClick={() => setShowGoalModal(false)}
+                  className="text-gray-400 hover:text-gray-600 transition-colors"
+                >
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+              
+              <div className="p-6 space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Monthly Dividend Goal ($)
+                  </label>
+                  <input
+                    type="number"
+                    value={monthlyGoal}
+                    onChange={(e) => setMonthlyGoal(Number(e.target.value))}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                    placeholder="e.g., 1000"
+                    step="0.01"
+                    min="0"
                   />
-                  <Bar dataKey="yield" fill="#10B981" />
-                </BarChart>
-              </ResponsiveContainer>
-            </div>
-          </div>
-        )}
-
-        {/* Portfolio Value Breakdown */}
-        <div className="bg-white p-6 rounded-lg border border-gray-200">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">Value Breakdown</h3>
-          <div className="space-y-4">
-            <div className="flex justify-between items-center">
-              <span className="text-gray-600">Total Invested</span>
-              <span className="font-semibold">${totalInvested.toLocaleString()}</span>
-            </div>
-            <div className="flex justify-between items-center">
-              <span className="text-gray-600">Current Value</span>
-              <span className="font-semibold">${currentValue.toLocaleString()}</span>
-            </div>
-            <div className="flex justify-between items-center">
-              <span className="text-gray-600">Unrealized P&L</span>
-              <span className={`font-semibold ${unrealizedPnL >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                {unrealizedPnL >= 0 ? '+' : ''}${unrealizedPnL.toLocaleString()}
-              </span>
-            </div>
-            <div className="flex justify-between items-center">
-              <span className="text-gray-600">Annual Dividends</span>
-              <span className="font-semibold text-blue-600">${annualDividends.toLocaleString()}</span>
-            </div>
-            <div className="border-t pt-4">
-              <div className="flex justify-between items-center">
-                <span className="text-gray-600">Return %</span>
-                <span className={`font-semibold ${totalGainLossPercent >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                  {totalGainLossPercent >= 0 ? '+' : ''}{totalGainLossPercent.toFixed(2)}%
-                </span>
+                  <p className="text-xs text-gray-500 mt-1">
+                    Annual equivalent: ${monthlyGoal ? (monthlyGoal * 12).toLocaleString() : '0'}
+                  </p>
+                </div>
+              </div>
+              
+              <div className="flex justify-end space-x-3 p-6 border-t border-gray-200">
+                <button
+                  onClick={() => setShowGoalModal(false)}
+                  className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleSaveGoals}
+                  disabled={updateGoals.isPending}
+                  className="px-4 py-2 text-sm font-medium text-white bg-indigo-600 rounded-lg hover:bg-indigo-700 disabled:opacity-50"
+                >
+                  {updateGoals.isPending ? 'Saving...' : 'Save Goals'}
+                </button>
               </div>
             </div>
           </div>
         </div>
-      </div>
-
-      {/* Top Performers Table */}
-      <div className="bg-white rounded-lg border border-gray-200">
-        <div className="p-6 border-b border-gray-200">
-          <h3 className="text-lg font-semibold text-gray-900">Position Details</h3>
-        </div>
-        <div className="overflow-x-auto">
-          <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50">
-              <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Ticker
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Shares
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Cost Basis
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Market Value
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Gain/Loss
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Return %
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Dividend Yield
-                </th>
-              </tr>
-            </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
-              {performanceData
-                .sort((a, b) => b.gainLossPercent - a.gainLossPercent)
-                .map((position) => (
-                  <tr key={position.ticker}>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                      {position.ticker}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      {position.shares}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      ${position.costBasis.toLocaleString()}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      ${position.marketValue.toLocaleString()}
-                    </td>
-                    <td className={`px-6 py-4 whitespace-nowrap text-sm font-medium ${
-                      position.gainLoss >= 0 ? 'text-green-600' : 'text-red-600'
-                    }`}>
-                      {position.gainLoss >= 0 ? '+' : ''}${position.gainLoss.toLocaleString()}
-                    </td>
-                    <td className={`px-6 py-4 whitespace-nowrap text-sm font-medium ${
-                      position.gainLossPercent >= 0 ? 'text-green-600' : 'text-red-600'
-                    }`}>
-                      {position.gainLossPercent >= 0 ? '+' : ''}{position.gainLossPercent.toFixed(2)}%
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      {positions.find(p => p.ticker === position.ticker)?.dividendYield?.toFixed(2) || 'N/A'}%
-                    </td>
-                  </tr>
-                ))}
-            </tbody>
-          </table>
-        </div>
-      </div>
+      )}
     </div>
   );
 }

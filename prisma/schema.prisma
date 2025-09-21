@@ -60,14 +60,16 @@ model User {
 }
 
 model Portfolio {
-  id          String   @id @default(cuid())
-  userId      String
-  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  name        String   @default("My Portfolio")
-  isMain      Boolean  @default(false)
-  positions   Position[]
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id                    String   @id @default(cuid())
+  userId                String
+  user                  User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name                  String   @default("My Portfolio")
+  isMain                Boolean  @default(false)
+  monthlyDividendGoal   Float?   // Monthly dividend income goal
+  annualDividendGoal    Float?   // Annual dividend income goal
+  positions             Position[]
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
 
   @@index([userId])
   @@index([userId, isMain])

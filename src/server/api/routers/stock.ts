@@ -108,4 +108,17 @@ export const stockRouter = createTRPCRouter({
     .mutation(async () => {
       return stockCache.cleanupOldCache();
     }),
+
+  // Get historical dividend data for timeline charts
+  getHistoricalDividendData: protectedProcedure
+    .input(z.object({
+      symbol: z.string(),
+      fromDate: z.string(),
+      toDate: z.string(),
+    }))
+    .query(async ({ input }) => {
+      const { stockAPI } = await import("~/lib/stock-api");
+      
+      return stockAPI.getHistoricalDividendData(input.symbol, input.fromDate, input.toDate);
+    }),
 });

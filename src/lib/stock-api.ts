@@ -62,6 +62,33 @@ class StockAPIService {
   }
 
   // Alpha Vantage API calls
+  private async fetchCompanyOverview(symbol: string): Promise<any | null> {
+    if (!this.alphaVantageKey || !this.canMakeRequest('alphaVantage')) {
+      return null;
+    }
+
+    try {
+      this.incrementRequest('alphaVantage');
+      
+      const response = await fetch(
+        `https://www.alphavantage.co/query?function=OVERVIEW&symbol=${symbol}&apikey=${this.alphaVantageKey}`
+      );
+      
+      if (!response.ok) throw new Error('Alpha Vantage company overview API error');
+      
+      const data = await response.json();
+      
+      if (data['Error Message'] || data['Note']) {
+        throw new Error(data['Error Message'] || data['Note']);
+      }
+
+      return data;
+    } catch (error) {
+      console.error('Alpha Vantage company overview error:', error);
+      return null;
+    }
+  }
+
   private async fetchFromAlphaVantage(symbol: string): Promise<StockData | null> {
     if (!this.alphaVantageKey || !this.canMakeRequest('alphaVantage')) {
       return null;
@@ -137,62 +164,249 @@ class StockAPIService {
 
   // Main method with fallback logic
   async getStockData(symbol: string): Promise<StockData | null> {
-    const apis = [
-      () => this.fetchFromAlphaVantage(symbol),
-      () => this.fetchFromFinnhub(symbol)
-    ];
+    // Try Alpha Vantage first (has both stock and dividend data)
+    const alphaVantageResult = await this.fetchFromAlphaVantage(symbol);
+    if (alphaVantageResult) {
+      // Try to get dividend yield from Alpha Vantage company overview
+      const companyOverview = await this.fetchCompanyOverview(symbol);
+      if (companyOverview && companyOverview.DividendYield) {
+        const dividendYield = parseFloat(companyOverview.DividendYield);
+        if (dividendYield > 0) {
+          // Alpha Vantage returns dividend yield as decimal (0.073), convert to percentage (7.3)
+          alphaVantageResult.dividendYield = dividendYield * 100;
+        }
+      }
+      return alphaVantageResult;
+    }
 
-    for (const apiCall of apis) {
+    // Fallback to Finnhub
+    const finnhubResult = await this.fetchFromFinnhub(symbol);
+    if (finnhubResult) {
+      return finnhubResult;
+    }
+
+    return null;
+  }
+
+  // Get company profile data (includes dividend yield, P/E ratio, etc.)
+  private async fetchCompanyProfile(symbol: string): Promise<any | null> {
+    if (!this.finnhubKey || !this.canMakeRequest('finnhub')) {
+      return null;
+    }
+
+    try {
+      this.incrementRequest('finnhub');
+      
+      const response = await fetch(
+        `https://finnhub.io/api/v1/stock/profile2?symbol=${symbol}&token=${this.finnhubKey}`
+      );
+      
+      if (!response.ok) throw new Error('Finnhub company profile API error');
+      
+      const data = await response.json();
+      
+      if (data.error) {
+        throw new Error(data.error);
+      }
+
+      return data;
+    } catch (error) {
+      console.error('Finnhub company profile error:', error);
+      return null;
+    }
+  }
+
+  // Get company financials data (includes dividend yield, P/E ratio, etc.)
+  private async fetchCompanyFinancials(symbol: string): Promise<any | null> {
+    if (!this.finnhubKey || !this.canMakeRequest('finnhub')) {
+      return null;
+    }
+
+    try {
+      this.incrementRequest('finnhub');
+      
+      const response = await fetch(
+        `https://finnhub.io/api/v1/stock/metric?symbol=${symbol}&metric=all&token=${this.finnhubKey}`
+      );
+      
+      if (!response.ok) throw new Error('Finnhub financials API error');
+      
+      const data = await response.json();
+      
+      if (data.error) {
+        throw new Error(data.error);
+      }
+
+      return data;
+    } catch (error) {
+      console.error('Finnhub financials error:', error);
+      return null;
+    }
+  }
+
+  // Get dividend data (primarily from Alpha Vantage)
+  async getDividendData(symbol: string): Promise<DividendData | null> {
+    // Try Alpha Vantage first (has comprehensive dividend data)
+    if (this.alphaVantageKey && this.canMakeRequest('alphaVantage')) {
       try {
-        const result = await apiCall();
-        if (result) {
-          return result;
+        this.incrementRequest('alphaVantage');
+        
+        const response = await fetch(
+          `https://www.alphavantage.co/query?function=DIVIDENDS&symbol=${symbol}&apikey=${this.alphaVantageKey}`
+        );
+        
+        if (!response.ok) throw new Error('Alpha Vantage dividends API error');
+        
+        const data = await response.json();
+        
+        if (data['Error Message'] || data['Note']) {
+          throw new Error(data['Error Message'] || data['Note']);
+        }
+
+        if (data['Monthly Adjusted Time Series']) {
+          // Get the most recent dividend from the time series
+          const timeSeries = data['Monthly Adjusted Time Series'] as Record<string, any>;
+          const dates = Object.keys(timeSeries).sort().reverse();
+          
+          if (dates.length > 0) {
+            const latestDate = dates[0];
+            const latestData = latestDate ? timeSeries[latestDate] : null;
+            
+            return {
+              symbol: symbol,
+              dividend: parseFloat(latestData?.['7. dividend amount'] || '0'),
+              exDate: latestDate || '',
+              recordDate: '',
+              paymentDate: latestDate || '',
+              source: 'alpha_vantage'
+            };
+          }
+        }
+
+        // Fallback to company overview for basic dividend data
+        const overview = await this.fetchCompanyOverview(symbol);
+        if (overview && overview.DividendPerShare) {
+          return {
+            symbol: overview.Symbol,
+            dividend: parseFloat(overview.DividendPerShare || '0'),
+            exDate: overview.ExDividendDate || '',
+            recordDate: overview.RecordDate || '',
+            paymentDate: overview.PaymentDate || '',
+            source: 'alpha_vantage'
+          };
         }
       } catch (error) {
-        continue;
+        console.error('Alpha Vantage dividend data error:', error);
+      }
+    }
+
+    // Fallback to Finnhub
+    if (this.finnhubKey && this.canMakeRequest('finnhub')) {
+      try {
+        this.incrementRequest('finnhub');
+        
+        const response = await fetch(
+          `https://finnhub.io/api/v1/stock/dividend?symbol=${symbol}&token=${this.finnhubKey}`
+        );
+        
+        if (!response.ok) throw new Error('Finnhub API error');
+        
+        const data = await response.json();
+        
+        if (data && data.length > 0) {
+          // Get the most recent dividend
+          const latestDividend = data[0];
+          return {
+            symbol: symbol,
+            dividend: latestDividend.amount || 0,
+            exDate: latestDividend.exDate || '',
+            recordDate: latestDividend.recordDate || '',
+            paymentDate: latestDividend.payDate || '',
+            source: 'finnhub'
+          };
+        }
+      } catch (error) {
+        console.error('Finnhub dividend data error:', error);
       }
     }
 
     return null;
   }
 
-  // Get dividend data (primarily from Alpha Vantage)
-  async getDividendData(symbol: string): Promise<DividendData | null> {
-    if (!this.alphaVantageKey || !this.canMakeRequest('alphaVantage')) {
-      return null;
+  // Get historical dividend data for timeline charts
+  async getHistoricalDividendData(symbol: string, fromDate: string, toDate: string): Promise<any[]> {
+    // Try Alpha Vantage first (has comprehensive historical dividend data)
+    if (this.alphaVantageKey && this.canMakeRequest('alphaVantage')) {
+      try {
+        this.incrementRequest('alphaVantage');
+        
+        const response = await fetch(
+          `https://www.alphavantage.co/query?function=DIVIDENDS&symbol=${symbol}&apikey=${this.alphaVantageKey}`
+        );
+        
+        if (!response.ok) throw new Error('Alpha Vantage historical dividend API error');
+        
+        const data = await response.json();
+        
+        if (data['Error Message'] || data['Note']) {
+          throw new Error(data['Error Message'] || data['Note']);
+        }
+
+        if (data['Monthly Adjusted Time Series']) {
+          const timeSeries = data['Monthly Adjusted Time Series'];
+          const dividends = [];
+          
+          for (const [date, values] of Object.entries(timeSeries)) {
+            const dividendAmount = parseFloat((values as any)['7. dividend amount'] || '0');
+            if (dividendAmount > 0) {
+              dividends.push({
+                date: date,
+                amount: dividendAmount,
+                exDate: date,
+                paymentDate: date
+              });
+            }
+          }
+          
+          // Sort by date and filter by date range
+          return dividends
+            .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+            .filter(d => {
+              const dividendDate = new Date(d.date);
+              const from = new Date(fromDate);
+              const to = new Date(toDate);
+              return dividendDate >= from && dividendDate <= to;
+            });
+        }
+      } catch (error) {
+        console.error('Alpha Vantage historical dividend error:', error);
+      }
     }
 
-    try {
-      this.incrementRequest('alphaVantage');
-      
-      const response = await fetch(
-        `https://www.alphavantage.co/query?function=OVERVIEW&symbol=${symbol}&apikey=${this.alphaVantageKey}`
-      );
-      
-      if (!response.ok) throw new Error('Alpha Vantage API error');
-      
-      const data = await response.json();
-      
-      if (data['Error Message'] || data['Note']) {
-        throw new Error(data['Error Message'] || data['Note']);
-      }
+    // Fallback to Finnhub
+    if (this.finnhubKey && this.canMakeRequest('finnhub')) {
+      try {
+        this.incrementRequest('finnhub');
+        
+        const response = await fetch(
+          `https://finnhub.io/api/v1/stock/dividend?symbol=${symbol}&from=${fromDate}&to=${toDate}&token=${this.finnhubKey}`
+        );
+        
+        if (!response.ok) throw new Error('Finnhub historical dividend API error');
+        
+        const data = await response.json();
+        
+        if (data.error) {
+          throw new Error(data.error);
+        }
 
-      if (!data.DividendYield) {
-        return null;
+        return data || [];
+      } catch (error) {
+        console.error('Finnhub historical dividend error:', error);
       }
-
-      return {
-        symbol: data.Symbol,
-        dividend: parseFloat(data.DividendPerShare || '0'),
-        exDate: data.ExDividendDate || '',
-        recordDate: data.RecordDate || '',
-        paymentDate: data.PaymentDate || '',
-        source: 'alpha_vantage'
-      };
-    } catch (error) {
-      console.error('Dividend data error:', error);
-      return null;
     }
+
+    return [];
   }
 
   // Get rate limit status

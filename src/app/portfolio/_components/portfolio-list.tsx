@@ -16,9 +16,10 @@ interface PortfolioListProps {
   portfolios: Portfolio[];
   selectedPortfolioId: string | null;
   onSelectPortfolio: (id: string) => void;
+  onEditPortfolio: (portfolio: Portfolio) => void;
 }
 
-export function PortfolioList({ portfolios, selectedPortfolioId, onSelectPortfolio }: PortfolioListProps) {
+export function PortfolioList({ portfolios, selectedPortfolioId, onSelectPortfolio, onEditPortfolio }: PortfolioListProps) {
   const utils = api.useUtils();
 
   const deletePortfolio = api.portfolio.delete.useMutation({
@@ -73,6 +74,15 @@ export function PortfolioList({ portfolios, selectedPortfolioId, onSelectPortfol
               )}
             </div>
             <div className="flex gap-2">
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onEditPortfolio(portfolio);
+                }}
+                className="text-green-500 hover:text-green-700 text-sm"
+              >
+                Edit
+              </button>
               {!portfolio.isMain && (
                 <button
                   onClick={(e) => {

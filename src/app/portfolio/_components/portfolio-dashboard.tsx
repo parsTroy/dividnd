@@ -198,6 +198,9 @@ export function PortfolioDashboard() {
             setShowEditPortfolio(false);
             setEditingPortfolio(null);
             void api.useUtils().portfolio.getAll.invalidate();
+            if (selectedPortfolioId) {
+              void api.useUtils().position.getPortfolioSummary.invalidate({ portfolioId: selectedPortfolioId });
+            }
           }}
         />
       )}

@@ -43,11 +43,23 @@ export function PortfolioAnalytics({
   const [showGoalModal, setShowGoalModal] = useState(false);
   const [monthlyGoal, setMonthlyGoal] = useState(monthlyDividendGoal || 0);
 
+  // Sync local state with props when they change
+  React.useEffect(() => {
+    setMonthlyGoal(monthlyDividendGoal || 0);
+  }, [monthlyDividendGoal]);
+
   const utils = api.useUtils();
   const updateGoals = api.portfolio.updateMonthlyDividendGoal.useMutation({
     onSuccess: () => {
+      // Invalidate all portfolio-related queries to ensure UI updates
       utils.portfolio.getAll.invalidate();
+      utils.position.getPortfolioSummary.invalidate({ portfolioId });
       setShowGoalModal(false);
+    },
+    onError: (error) => {
+      console.error('Failed to update goals:', error);
+      // Reset local state on error
+      setMonthlyGoal(monthlyDividendGoal || 0);
     },
   });
 

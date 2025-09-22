@@ -193,14 +193,16 @@ export function PortfolioAnalytics({
         </div>
       </div>
 
-      {/* Stock Suggestions */}
-      <div className="mt-8">
-        <StockSuggestions
-          portfolioId={portfolioId}
-          monthlyDividendGoal={monthlyDividendGoal ?? null}
-          currentPositions={currentPositions}
-        />
-      </div>
+      {/* Stock Suggestions - Only show if there are suggestions */}
+      {monthlyDividendGoal && monthlyDividendGoal > 0 && (
+        <div className="mt-8">
+          <StockSuggestions
+            portfolioId={portfolioId}
+            monthlyDividendGoal={monthlyDividendGoal}
+            currentPositions={currentPositions}
+          />
+        </div>
+      )}
 
       {/* Future Value Calculator CTA - Full Width */}
       <div className="bg-gradient-to-r from-blue-50 to-indigo-50 p-6 rounded-xl border border-blue-200 shadow-sm">
@@ -368,79 +370,149 @@ export function PortfolioAnalytics({
         </div>
       </div>
 
-      {/* Dividend Income Timeline - Full Width */}
+      {/* Dividend Income Progress - Full Width */}
       <div className="bg-white p-6 rounded-xl border border-gray-200 shadow-sm">
-        <h3 className="text-lg font-semibold text-gray-900 mb-4">Anticipated Dividend Income Timeline</h3>
-        <div className="h-80">
-          <ResponsiveLine
-            data={[
-              {
-                id: 'Actual Income',
-                data: dividendTimelineData.map(d => ({ x: d.month, y: d.actual })),
-                color: '#3B82F6'
-              },
-              {
-                id: 'Goal',
-                data: dividendTimelineData.map(d => ({ x: d.month, y: d.goal })),
-                color: '#10B981'
-              }
-            ]}
-            margin={{ top: 50, right: 110, bottom: 50, left: 60 }}
-            xScale={{ type: 'point' }}
-            yScale={{ type: 'linear', min: 'auto', max: 'auto', stacked: false, reverse: false }}
-            yFormat={(value) => formatCurrency(Number(value))}
-            curve="cardinal"
-            axisTop={null}
-            axisRight={null}
-            axisBottom={{
-              tickSize: 5,
-              tickPadding: 5,
-              tickRotation: 0,
-              legend: 'Month',
-              legendOffset: 36,
-              legendPosition: 'middle'
-            }}
-            axisLeft={{
-              tickSize: 5,
-              tickPadding: 5,
-              tickRotation: 0,
-              format: (value) => formatCurrency(Number(value))
-            }}
-            pointSize={10}
-            pointColor={{ theme: 'background' }}
-            pointBorderWidth={2}
-            pointBorderColor={{ from: 'serieColor' }}
-            pointLabelYOffset={-12}
-            useMesh={true}
-            colors={{ scheme: 'nivo' }}
-            lineWidth={3}
-            enableSlices="x"
-            legends={[
-              {
-                anchor: 'bottom-right',
-                direction: 'column',
-                justify: false,
-                translateX: 100,
-                translateY: 0,
-                itemsSpacing: 0,
-                itemDirection: 'left-to-right',
-                itemWidth: 80,
-                itemHeight: 20,
-                itemOpacity: 0.75,
-                symbolSize: 12,
-                symbolShape: 'circle',
-                effects: [
-                  {
-                    on: 'hover',
-                    style: {
-                      itemBackground: 'rgba(0, 0, 0, .03)',
-                      itemOpacity: 1
-                    }
+        <h3 className="text-lg font-semibold text-gray-900 mb-4">Dividend Income Progress</h3>
+        <div className="h-96 flex items-center justify-center">
+          <div className="w-full max-w-md relative">
+            {monthlyDividendGoal && monthlyDividendGoal > 0 ? (
+              <ResponsivePie
+                data={(() => {
+                  const achievedValue = Math.min(monthlyDividendIncome, monthlyDividendGoal);
+                  const exceededValue = Math.max(0, monthlyDividendIncome - monthlyDividendGoal);
+                  const remainingValue = Math.max(0, monthlyDividendGoal - monthlyDividendIncome);
+                  
+                  const data = [];
+                  
+                  if (achievedValue > 0) {
+                    data.push({
+                      id: 'Achieved',
+                      label: 'Achieved',
+                      value: achievedValue,
+                      color: '#4ECDC4'
+                    });
                   }
-                ]
-              }
-            ]}
-          />
+                  
+                  if (exceededValue > 0) {
+                    data.push({
+                      id: 'Exceeded',
+                      label: 'Exceeded',
+                      value: exceededValue,
+                      color: '#FFD700'
+                    });
+                  }
+                  
+                  if (remainingValue > 0) {
+                    data.push({
+                      id: 'Remaining',
+                      label: 'Remaining',
+                      value: remainingValue,
+                      color: '#E5E7EB'
+                    });
+                  }
+                  
+                  return data;
+                })()}
+                margin={{ top: 40, right: 80, bottom: 80, left: 80 }}
+                innerRadius={0.6}
+                padAngle={0.7}
+                cornerRadius={8}
+                activeOuterRadiusOffset={8}
+                borderWidth={1}
+                borderColor={{ from: 'color', modifiers: [['darker', 0.2]] }}
+                arcLinkLabelsSkipAngle={10}
+                arcLinkLabelsTextColor="#333333"
+                arcLinkLabelsThickness={2}
+                arcLinkLabelsColor={{ from: 'color' }}
+                arcLabelsSkipAngle={10}
+                arcLabelsTextColor={{ from: 'color', modifiers: [['darker', 2]] }}
+                defs={[
+                  {
+                    id: 'gradient1',
+                    type: 'linearGradient',
+                    colors: [
+                      { offset: 0, color: '#4ECDC4', opacity: 0.8 },
+                      { offset: 100, color: '#7EDDD6', opacity: 0.4 }
+                    ]
+                  },
+                  {
+                    id: 'gradient2',
+                    type: 'linearGradient',
+                    colors: [
+                      { offset: 0, color: '#E5E7EB', opacity: 0.6 },
+                      { offset: 100, color: '#F3F4F6', opacity: 0.3 }
+                    ]
+                  },
+                  {
+                    id: 'gradient3',
+                    type: 'linearGradient',
+                    colors: [
+                      { offset: 0, color: '#FFD700', opacity: 0.8 },
+                      { offset: 100, color: '#FFEA00', opacity: 0.4 }
+                    ]
+                  }
+                ]}
+                fill={[
+                  { match: { id: 'Achieved' }, id: 'gradient1' },
+                  { match: { id: 'Exceeded' }, id: 'gradient3' },
+                  { match: { id: 'Remaining' }, id: 'gradient2' }
+                ]}
+                legends={[
+                  {
+                    anchor: 'bottom',
+                    direction: 'row',
+                    justify: false,
+                    translateX: 0,
+                    translateY: 56,
+                    itemsSpacing: 0,
+                    itemDirection: 'left-to-right',
+                    itemWidth: 100,
+                    itemHeight: 18,
+                    itemTextColor: '#999',
+                    itemOpacity: 0.85,
+                    symbolSize: 18,
+                    symbolShape: 'circle',
+                    effects: [
+                      {
+                        on: 'hover',
+                        style: {
+                          itemTextColor: '#000'
+                        }
+                      }
+                    ]
+                  }
+                ]}
+                theme={{
+                  background: 'transparent',
+                  text: {
+                    fontSize: 12,
+                    fill: '#333333',
+                    fontFamily: 'Inter, sans-serif'
+                  }
+                }}
+              />
+            ) : (
+              <div className="text-center text-gray-500">
+                <div className="text-6xl mb-4">🎯</div>
+                <div className="text-lg font-medium">No Goal Set</div>
+                <div className="text-sm">Set a monthly dividend goal to see your progress</div>
+              </div>
+            )}
+            {/* Center Text */}
+            {monthlyDividendGoal && monthlyDividendGoal > 0 && (
+              <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                <div className="text-center">
+                  <div className="text-3xl font-bold text-gray-900">
+                    {Math.round((monthlyDividendIncome / monthlyDividendGoal) * 100)}%
+                  </div>
+                  <div className="text-sm text-gray-600 mt-1">Goal Progress</div>
+                  <div className="text-xs text-gray-500 mt-2">
+                    {formatCurrency(monthlyDividendIncome)} / {formatCurrency(monthlyDividendGoal)}
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
         </div>
       </div>
 

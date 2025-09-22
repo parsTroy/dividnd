@@ -55,8 +55,8 @@ export function StockSuggestions({ portfolioId, monthlyDividendGoal, currentPosi
         .filter(stock => 
           stock.dividendYield && 
           stock.dividendYield >= 3 && 
-          stock.currentPrice && 
-          stock.currentPrice > 0
+          stock.price && 
+          stock.price > 0
         )
         .sort((a, b) => (b.dividendYield || 0) - (a.dividendYield || 0))
         .slice(0, 10); // Top 10 high yield stocks
@@ -64,22 +64,22 @@ export function StockSuggestions({ portfolioId, monthlyDividendGoal, currentPosi
       // Filter out stocks already in portfolio
       const currentTickers = currentPositions.map(pos => pos.ticker.toUpperCase());
       const availableStocks = highYieldStocks.filter(
-        stock => !currentTickers.includes(stock.ticker.toUpperCase())
+        stock => !currentTickers.includes(stock.symbol.toUpperCase())
       );
 
       // Calculate suggestions
       const monthlyGoal = monthlyDividendGoal;
       const suggestions: StockSuggestion[] = availableStocks.map(stock => {
-        const annualDividend = (stock.currentPrice || 0) * (stock.dividendYield || 0) / 100;
+        const annualDividend = (stock.price || 0) * (stock.dividendYield || 0) / 100;
         const monthlyDividend = annualDividend / 12;
         const sharesNeeded = Math.ceil(monthlyGoal / monthlyDividend);
-        const investmentNeeded = sharesNeeded * (stock.currentPrice || 0);
+        const investmentNeeded = sharesNeeded * (stock.price || 0);
         const actualMonthlyIncome = sharesNeeded * monthlyDividend;
 
         return {
-          ticker: stock.ticker,
-          name: stock.ticker, // We don't have company names in cached data
-          currentPrice: stock.currentPrice || 0,
+          ticker: stock.symbol,
+          name: stock.symbol, // We don't have company names in cached data
+          currentPrice: stock.price || 0,
           dividendYield: stock.dividendYield || 0,
           annualDividend,
           sharesNeeded,
@@ -108,21 +108,12 @@ export function StockSuggestions({ portfolioId, monthlyDividendGoal, currentPosi
   }, [monthlyDividendGoal, currentPositions.length]);
 
   if (!monthlyDividendGoal || monthlyDividendGoal <= 0) {
-    return (
-      <div className="bg-gradient-to-r from-yellow-50 to-orange-50 p-6 rounded-xl border border-yellow-200 shadow-sm">
-        <div className="flex items-center">
-          <div className="w-8 h-8 bg-yellow-100 rounded-full flex items-center justify-center mr-3">
-            <svg className="w-4 h-4 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
-          </div>
-          <div>
-            <h3 className="text-lg font-semibold text-gray-900">Stock Suggestions</h3>
-            <p className="text-sm text-gray-600">Set a monthly dividend goal to get personalized stock recommendations</p>
-          </div>
-        </div>
-      </div>
-    );
+    return null; // Hide the entire section if no goal is set
+  }
+
+  // If there's an error or no suggestions, hide the entire section
+  if (error || suggestions.length === 0) {
+    return null;
   }
 
   return (

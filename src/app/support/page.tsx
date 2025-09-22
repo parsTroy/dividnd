@@ -149,11 +149,8 @@ export default function SupportPage() {
                   <Link href="/contact" className="block text-blue-600 hover:text-blue-700">
                     Contact Form
                   </Link>
-                  <Link href="/api-docs" className="block text-blue-600 hover:text-blue-700">
-                    API Documentation
-                  </Link>
-                  <Link href="/status" className="block text-blue-600 hover:text-blue-700">
-                    System Status
+                  <Link href="/terms" className="block text-blue-600 hover:text-blue-700">
+                    Terms of Service
                   </Link>
                   <Link href="/privacy" className="block text-blue-600 hover:text-blue-700">
                     Privacy Policy

@@ -1,12 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { Metadata } from "next";
-
-export const metadata: Metadata = {
-  title: "Contact Us - Dividnd",
-  description: "Get in touch with the Dividnd team for support, feedback, or business inquiries",
-};
 
 export default function ContactPage() {
   const [formData, setFormData] = useState({
@@ -234,15 +228,15 @@ export default function ContactPage() {
                 <a href="/support" className="block text-blue-600 hover:text-blue-700">
                   → Help Center & FAQ
                 </a>
-                <a href="/api-docs" className="block text-blue-600 hover:text-blue-700">
-                  → API Documentation
+                <a href="/terms" className="block text-blue-600 hover:text-blue-700">
+                  → Terms of Service
                 </a>
-                <a href="/status" className="block text-blue-600 hover:text-blue-700">
-                  → System Status
+                <a href="/privacy" className="block text-blue-600 hover:text-blue-700">
+                  → Privacy Policy
                 </a>
-                <a href="https://twitter.com/dividnd" className="block text-blue-600 hover:text-blue-700">
+                {/* <a href="https://twitter.com/dividnd" className="block text-blue-600 hover:text-blue-700">
                   → Follow us on Twitter
-                </a>
+                </a> */}
               </div>
             </div>
 
@@ -255,8 +249,8 @@ export default function ContactPage() {
                 <a href="/support" className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors">
                   Help Center
                 </a>
-                <a href="/status" className="bg-white text-blue-600 px-4 py-2 rounded-lg border border-blue-600 hover:bg-blue-50 transition-colors">
-                  System Status
+                <a href="/privacy" className="bg-white text-blue-600 px-4 py-2 rounded-lg border border-blue-600 hover:bg-blue-50 transition-colors">
+                  Privacy Policy
                 </a>
               </div>
             </div>

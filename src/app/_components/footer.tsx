@@ -89,13 +89,13 @@ export default function Footer() {
                 </Link>
               </li>
               <li>
-                <Link href="/api-docs" className="text-gray-600 hover:text-blue-600 text-sm transition-colors">
-                  API Documentation
+                <Link href="/terms" className="text-gray-600 hover:text-blue-600 text-sm transition-colors">
+                  Terms of Service
                 </Link>
               </li>
               <li>
-                <Link href="/status" className="text-gray-600 hover:text-blue-600 text-sm transition-colors">
-                  System Status
+                <Link href="/privacy" className="text-gray-600 hover:text-blue-600 text-sm transition-colors">
+                  Privacy Policy
                 </Link>
               </li>
             </ul>

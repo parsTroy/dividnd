@@ -93,7 +93,7 @@ export default function PricingPage() {
         )}
 
         {/* Pricing Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-16">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-16 max-w-4xl mx-auto">
           {plans.map((plan) => (
             <div
               key={plan.tier}
@@ -178,7 +178,6 @@ export default function PricingPage() {
                 <tr>
                   <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900">Features</th>
                   <th className="px-6 py-4 text-center text-sm font-semibold text-gray-900">Free</th>
-                  <th className="px-6 py-4 text-center text-sm font-semibold text-gray-900">Pro</th>
                   <th className="px-6 py-4 text-center text-sm font-semibold text-gray-900">Premium</th>
                 </tr>
               </thead>
@@ -186,37 +185,26 @@ export default function PricingPage() {
                 <tr>
                   <td className="px-6 py-4 text-sm text-gray-900">Portfolios</td>
                   <td className="px-6 py-4 text-center text-sm text-gray-600">{PRICING_PLANS.free.limits.portfolios}</td>
-                  <td className="px-6 py-4 text-center text-sm text-gray-600">{PRICING_PLANS.pro.limits.portfolios === -1 ? 'Unlimited' : PRICING_PLANS.pro.limits.portfolios}</td>
                   <td className="px-6 py-4 text-center text-sm text-gray-600">{PRICING_PLANS.premium.limits.portfolios === -1 ? 'Unlimited' : PRICING_PLANS.premium.limits.portfolios}</td>
                 </tr>
                 <tr>
                   <td className="px-6 py-4 text-sm text-gray-900">Stock Positions</td>
                   <td className="px-6 py-4 text-center text-sm text-gray-600">{PRICING_PLANS.free.limits.positions}</td>
-                  <td className="px-6 py-4 text-center text-sm text-gray-600">{PRICING_PLANS.pro.limits.positions === -1 ? 'Unlimited' : PRICING_PLANS.pro.limits.positions}</td>
                   <td className="px-6 py-4 text-center text-sm text-gray-600">{PRICING_PLANS.premium.limits.positions === -1 ? 'Unlimited' : PRICING_PLANS.premium.limits.positions}</td>
-                </tr>
-                <tr>
-                  <td className="px-6 py-4 text-sm text-gray-900">API Calls/Month</td>
-                  <td className="px-6 py-4 text-center text-sm text-gray-600">{PRICING_PLANS.free.limits.apiCallsPerMonth}</td>
-                  <td className="px-6 py-4 text-center text-sm text-gray-600">{PRICING_PLANS.pro.limits.apiCallsPerMonth.toLocaleString()}</td>
-                  <td className="px-6 py-4 text-center text-sm text-gray-600">{PRICING_PLANS.premium.limits.apiCallsPerMonth.toLocaleString()}</td>
                 </tr>
                 <tr>
                   <td className="px-6 py-4 text-sm text-gray-900">Advanced Analytics</td>
                   <td className="px-6 py-4 text-center text-sm text-gray-600">{PRICING_PLANS.free.limits.advancedAnalytics ? '✓' : '-'}</td>
-                  <td className="px-6 py-4 text-center text-sm text-gray-600">{PRICING_PLANS.pro.limits.advancedAnalytics ? '✓' : '-'}</td>
                   <td className="px-6 py-4 text-center text-sm text-gray-600">{PRICING_PLANS.premium.limits.advancedAnalytics ? '✓' : '-'}</td>
                 </tr>
                 <tr>
                   <td className="px-6 py-4 text-sm text-gray-900">Export Data</td>
                   <td className="px-6 py-4 text-center text-sm text-gray-600">{PRICING_PLANS.free.limits.exportData ? '✓' : '-'}</td>
-                  <td className="px-6 py-4 text-center text-sm text-gray-600">{PRICING_PLANS.pro.limits.exportData ? '✓' : '-'}</td>
                   <td className="px-6 py-4 text-center text-sm text-gray-600">{PRICING_PLANS.premium.limits.exportData ? '✓' : '-'}</td>
                 </tr>
                 <tr>
                   <td className="px-6 py-4 text-sm text-gray-900">Priority Support</td>
                   <td className="px-6 py-4 text-center text-sm text-gray-600">{PRICING_PLANS.free.limits.prioritySupport ? '✓' : '-'}</td>
-                  <td className="px-6 py-4 text-center text-sm text-gray-600">{PRICING_PLANS.pro.limits.prioritySupport ? '✓' : '-'}</td>
                   <td className="px-6 py-4 text-center text-sm text-gray-600">{PRICING_PLANS.premium.limits.prioritySupport ? '✓' : '-'}</td>
                 </tr>
               </tbody>

@@ -34,7 +34,7 @@ export const subscriptionRouter = createTRPCRouter({
 
   checkFeatureAccess: protectedProcedure
     .input(z.object({
-      feature: z.enum(['portfolios', 'positions', 'apiCallsPerMonth', 'advancedAnalytics', 'exportData', 'prioritySupport']),
+      feature: z.enum(['portfolios', 'positions', 'advancedAnalytics', 'exportData', 'prioritySupport']),
     }))
     .query(async ({ ctx, input }) => {
       const subscription = await getUserSubscription(ctx.session.user.id);

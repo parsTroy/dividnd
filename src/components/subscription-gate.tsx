@@ -73,7 +73,6 @@ export function SubscriptionGate({
     return null;
   }
 
-  const proPlan = PRICING_PLANS.pro;
   const premiumPlan = PRICING_PLANS.premium;
 
   return (
@@ -91,40 +90,34 @@ export function SubscriptionGate({
           {feature === 'advancedAnalytics' && 'Upgrade for Advanced Analytics'}
           {feature === 'exportData' && 'Upgrade to Export Your Data'}
           {feature === 'prioritySupport' && 'Upgrade for Priority Support'}
-          {feature === 'apiCallsPerMonth' && 'Upgrade for More API Calls'}
         </h3>
         
         <p className="text-gray-600 mb-6">
-          This feature is available with our Pro and Premium plans. Upgrade now to unlock this and many other powerful features.
+          This feature is available with our Premium plan. Upgrade now to unlock this and many other powerful features.
         </p>
 
         <div className="space-y-3">
-          <div className="flex items-center justify-between p-3 bg-white rounded-lg border border-gray-200">
-            <div className="text-left">
-              <h4 className="font-medium text-gray-900">{proPlan.name}</h4>
-              <p className="text-sm text-gray-600">${proPlan.price.monthly}/month</p>
-            </div>
-            <button
-              onClick={() => handleUpgrade(proPlan.stripePriceId.monthly)}
-              disabled={isLoading}
-              className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50 text-sm font-medium"
-            >
-              {isLoading ? 'Loading...' : 'Upgrade'}
-            </button>
-          </div>
-
-          <div className="flex items-center justify-between p-3 bg-white rounded-lg border border-gray-200">
+          <div className="flex items-center justify-between p-4 bg-white rounded-lg border border-gray-200">
             <div className="text-left">
               <h4 className="font-medium text-gray-900">{premiumPlan.name}</h4>
-              <p className="text-sm text-gray-600">${premiumPlan.price.monthly}/month</p>
+              <p className="text-sm text-gray-600">${premiumPlan.price.monthly}/month or ${premiumPlan.price.annual}/year</p>
             </div>
-            <button
-              onClick={() => handleUpgrade(premiumPlan.stripePriceId.monthly)}
-              disabled={isLoading}
-              className="px-4 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700 disabled:opacity-50 text-sm font-medium"
-            >
-              {isLoading ? 'Loading...' : 'Upgrade'}
-            </button>
+            <div className="space-x-2">
+              <button
+                onClick={() => handleUpgrade(premiumPlan.stripePriceId.monthly)}
+                disabled={isLoading}
+                className="px-3 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50 text-sm font-medium"
+              >
+                {isLoading ? 'Loading...' : 'Monthly'}
+              </button>
+              <button
+                onClick={() => handleUpgrade(premiumPlan.stripePriceId.annual)}
+                disabled={isLoading}
+                className="px-3 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700 disabled:opacity-50 text-sm font-medium"
+              >
+                {isLoading ? 'Loading...' : 'Annual'}
+              </button>
+            </div>
           </div>
         </div>
 

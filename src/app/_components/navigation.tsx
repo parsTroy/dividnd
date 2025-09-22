@@ -1,7 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { useSession, signOut } from "next-auth/react";
+import { useSession } from "next-auth/react";
+import { UserProfileDropdown } from "~/components/user-profile-dropdown";
 
 export function Navigation() {
   const { data: session } = useSession();
@@ -35,15 +36,7 @@ export function Navigation() {
           </div>
           
           <div className="flex items-center space-x-4">
-            <span className="text-sm text-gray-700">
-              Welcome, {session.user.name}
-            </span>
-            <button
-              onClick={() => signOut()}
-              className="text-gray-500 hover:text-gray-700 px-3 py-2 rounded-md text-sm font-medium transition-colors"
-            >
-              Sign Out
-            </button>
+            <UserProfileDropdown />
           </div>
         </div>
       </div>

@@ -1,4 +1,4 @@
-export type SubscriptionTier = 'free' | 'pro' | 'premium';
+export type SubscriptionTier = 'free' | 'premium';
 
 export interface PricingPlan {
   id: string;
@@ -16,7 +16,6 @@ export interface PricingPlan {
   limits: {
     portfolios: number;
     positions: number;
-    apiCallsPerMonth: number;
     advancedAnalytics: boolean;
     exportData: boolean;
     prioritySupport: boolean;
@@ -47,75 +46,43 @@ export const PRICING_PLANS: Record<SubscriptionTier, PricingPlan> = {
     limits: {
       portfolios: 1,
       positions: 10,
-      apiCallsPerMonth: 100,
       advancedAnalytics: false,
       exportData: false,
       prioritySupport: false,
     },
   },
-  pro: {
-    id: 'pro',
-    name: 'Pro',
-    description: 'For serious dividend investors',
+  premium: {
+    id: 'premium',
+    name: 'Premium',
+    description: 'For serious dividend investors and professionals',
     price: {
-      monthly: 9.99,
-      annual: 99.99,
+      monthly: 6.99,
+      annual: 69.99,
     },
     stripePriceId: {
-      monthly: 'price_1QuMpaE6rMvP3MWrCGYsWEiL',
-      annual: 'price_1QuMpaE6rMvP3MWrHx7SLm7G',
+      monthly: 'prod_T6V1W9YKVMLmga',
+      annual: 'prod_T6V1S8RjZ6rw9I',
     },
     features: [
-      '5 Portfolios',
+      'Unlimited portfolios',
       'Unlimited positions',
       'Advanced analytics & charts',
       'Real-time stock data',
       'Dividend calendar',
       'Export data (CSV/PDF)',
-      'Email support',
-      '1,000 API calls/month',
-    ],
-    limits: {
-      portfolios: 5,
-      positions: -1, // unlimited
-      apiCallsPerMonth: 1000,
-      advancedAnalytics: true,
-      exportData: true,
-      prioritySupport: false,
-    },
-    popular: true,
-  },
-  premium: {
-    id: 'premium',
-    name: 'Premium',
-    description: 'For professional investors and advisors',
-    price: {
-      monthly: 29.99,
-      annual: 299.99,
-    },
-    stripePriceId: {
-      monthly: 'price_premium_monthly', // Replace with actual Stripe price IDs
-      annual: 'price_premium_annual',
-    },
-    features: [
-      'Unlimited portfolios',
-      'Unlimited positions',
-      'All Pro features',
       'Advanced portfolio optimization',
       'Custom reporting',
-      'API access',
       'Priority support',
-      '10,000 API calls/month',
       'White-label options',
     ],
     limits: {
       portfolios: -1, // unlimited
       positions: -1, // unlimited
-      apiCallsPerMonth: 10000,
       advancedAnalytics: true,
       exportData: true,
       prioritySupport: true,
     },
+    popular: true,
   },
 };
 
@@ -146,7 +113,13 @@ export function canUserAccessFeature(
   feature: keyof PricingPlan['limits']
 ): boolean {
   const userPlan = getPlanByTier(userTier);
-  return userPlan.limits[feature] === true || userPlan.limits[feature] > 0;
+  const limit = userPlan.limits[feature];
+  
+  if (typeof limit === 'boolean') {
+    return limit;
+  }
+  
+  return limit > 0;
 }
 
 export function getUserLimits(tier: SubscriptionTier): PricingPlan['limits'] {

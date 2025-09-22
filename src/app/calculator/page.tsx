@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
+import { ResponsiveLine } from '@nivo/line';
 import { api } from "~/trpc/react";
 
 export default function CalculatorPage() {
@@ -30,6 +31,13 @@ export default function CalculatorPage() {
   const { data: portfolios } = api.portfolio.getAll.useQuery(undefined, {
     enabled: !!session
   });
+
+  // Get portfolio summary when a portfolio is selected
+  const [selectedPortfolioId, setSelectedPortfolioId] = useState<string>('');
+  const { data: portfolioSummary } = api.position.getPortfolioSummary.useQuery(
+    { portfolioId: selectedPortfolioId },
+    { enabled: !!selectedPortfolioId }
+  );
 
   const calculateFutureValue = () => {
     const currentVal = parseFloat(formData.currentValue) || 0;
@@ -108,6 +116,16 @@ export default function CalculatorPage() {
 
   const formatPercentage = (value: number) => `${value.toFixed(2)}%`;
 
+  // Update current value when portfolio summary is loaded
+  useEffect(() => {
+    if (portfolioSummary) {
+      setFormData(prev => ({
+        ...prev,
+        currentValue: portfolioSummary.summary.totalCurrentValue.toString()
+      }));
+    }
+  }, [portfolioSummary]);
+
   if (status === "loading") {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -167,26 +185,28 @@ export default function CalculatorPage() {
                     placeholder="Enter current portfolio value"
                   />
                   {portfolios && portfolios.length > 0 && (
-                    <select
-                      onChange={(e) => {
-                        if (e.target.value) {
-                          const portfolio = portfolios.find(p => p.id === e.target.value);
-                          if (portfolio) {
-                            // You would need to get the portfolio summary here
-                            // For now, just set a placeholder
-                            setFormData({ ...formData, currentValue: '10000' });
-                          }
-                        }
-                      }}
-                      className="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    >
-                      <option value="">Select Portfolio</option>
-                      {portfolios.map((portfolio) => (
-                        <option key={portfolio.id} value={portfolio.id}>
-                          {portfolio.name}
-                        </option>
-                      ))}
-                    </select>
+                    <div className="flex items-center space-x-2">
+                      <select
+                        value={selectedPortfolioId}
+                        onChange={(e) => {
+                          setSelectedPortfolioId(e.target.value);
+                        }}
+                        className="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      >
+                        <option value="">Select Portfolio</option>
+                        {portfolios.map((portfolio) => (
+                          <option key={portfolio.id} value={portfolio.id}>
+                            {portfolio.name}
+                          </option>
+                        ))}
+                      </select>
+                      {selectedPortfolioId && !portfolioSummary && (
+                        <div className="flex items-center text-sm text-gray-500">
+                          <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600 mr-2"></div>
+                          Loading...
+                        </div>
+                      )}
+                    </div>
                   )}
                 </div>
               </div>
@@ -316,11 +336,82 @@ export default function CalculatorPage() {
                 {/* Growth Chart */}
                 <div>
                   <h3 className="text-lg font-semibold text-gray-900 mb-4">Growth Over Time</h3>
-                  <div className="h-64 bg-gray-50 rounded-lg p-4">
-                    <div className="text-center text-gray-500">
-                      <p>Chart visualization would go here</p>
-                      <p className="text-sm">Showing portfolio growth from {formatCurrency(parseFloat(formData.currentValue) || 0)} to {formatCurrency(results.futureValue)}</p>
-                    </div>
+                  <div className="h-64 bg-white rounded-lg border border-gray-200 p-4">
+                    <ResponsiveLine
+                      data={[
+                        {
+                          id: 'Portfolio Value',
+                          data: results.monthlyBreakdown.map((item, index) => ({
+                            x: `Year ${Math.floor(index / 12) + 1}`,
+                            y: item.value
+                          }))
+                        }
+                      ]}
+                      margin={{ top: 20, right: 20, bottom: 40, left: 60 }}
+                      xScale={{ type: 'point' }}
+                      yScale={{ type: 'linear', min: 'auto', max: 'auto', stacked: false, reverse: false }}
+                      yFormat={(value) => formatCurrency(Number(value))}
+                      curve="monotoneX"
+                      axisTop={null}
+                      axisRight={null}
+                      axisBottom={{
+                        tickSize: 5,
+                        tickPadding: 5,
+                        tickRotation: -45
+                      }}
+                      axisLeft={{
+                        tickSize: 5,
+                        tickPadding: 5,
+                        tickRotation: 0,
+                        format: (value) => formatCurrency(Number(value))
+                      }}
+                      pointSize={6}
+                      pointColor={{ theme: 'background' }}
+                      pointBorderWidth={2}
+                      pointBorderColor={{ from: 'serieColor' }}
+                      pointLabelYOffset={-12}
+                      useMesh={true}
+                      colors={['#3B82F6']}
+                      lineWidth={3}
+                      enableSlices="x"
+                      enableArea={true}
+                      areaOpacity={0.1}
+                      areaBaselineValue={0}
+                      theme={{
+                        background: 'transparent',
+                        text: {
+                          fontSize: 12,
+                          fill: '#6B7280',
+                          fontFamily: 'Inter, sans-serif'
+                        },
+                        axis: {
+                          domain: {
+                            line: {
+                              stroke: '#E5E7EB',
+                              strokeWidth: 1
+                            }
+                          },
+                          ticks: {
+                            line: {
+                              stroke: '#E5E7EB',
+                              strokeWidth: 1
+                            },
+                            text: {
+                              fontSize: 11,
+                              fill: '#6B7280',
+                              fontFamily: 'Inter, sans-serif'
+                            }
+                          }
+                        },
+                        grid: {
+                          line: {
+                            stroke: '#F3F4F6',
+                            strokeWidth: 1,
+                            strokeDasharray: '2,2'
+                          }
+                        }
+                      }}
+                    />
                   </div>
                 </div>
 

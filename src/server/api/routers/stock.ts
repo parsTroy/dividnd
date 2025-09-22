@@ -25,6 +25,22 @@ export const stockRouter = createTRPCRouter({
       return data;
     }),
 
+  // Get all cached stock data (for suggestions)
+  getAllCachedStocks: publicProcedure
+    .query(async ({ ctx }) => {
+      const stocks = await ctx.db.stockData.findMany({
+        where: {
+          lastUpdated: {
+            gte: new Date(Date.now() - 24 * 60 * 60 * 1000) // Last 24 hours
+          }
+        },
+        orderBy: {
+          lastUpdated: 'desc'
+        }
+      });
+      return stocks;
+    }),
+
   // Get cached dividend data for a symbol
   getDividendData: publicProcedure
     .input(z.object({ symbol: z.string().toUpperCase() }))

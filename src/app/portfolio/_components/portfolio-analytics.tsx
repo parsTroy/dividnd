@@ -5,6 +5,7 @@ import { ResponsivePie } from '@nivo/pie';
 import { ResponsiveBar } from '@nivo/bar';
 import { ResponsiveLine } from '@nivo/line';
 import { api } from "~/trpc/react";
+import { StockSuggestions } from "./stock-suggestions";
 
 interface Position {
   id: string;
@@ -25,6 +26,7 @@ interface PortfolioAnalyticsProps {
   portfolioId: string;
   monthlyDividendGoal?: number | null;
   annualDividendGoal?: number | null;
+  currentPositions: Array<{ ticker: string }>;
 }
 
 const formatCurrency = (value: number) => `$${value.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
@@ -40,6 +42,7 @@ export function PortfolioAnalytics({
   portfolioId,
   monthlyDividendGoal,
   annualDividendGoal,
+  currentPositions,
 }: PortfolioAnalyticsProps) {
   const [showGoalModal, setShowGoalModal] = useState(false);
   const [monthlyGoal, setMonthlyGoal] = useState(monthlyDividendGoal || 0);
@@ -190,6 +193,14 @@ export function PortfolioAnalytics({
         </div>
       </div>
 
+      {/* Stock Suggestions */}
+      <div className="mt-8">
+        <StockSuggestions
+          portfolioId={portfolioId}
+          monthlyDividendGoal={monthlyDividendGoal ?? null}
+          currentPositions={currentPositions}
+        />
+      </div>
 
       {/* Future Value Calculator CTA - Full Width */}
       <div className="bg-gradient-to-r from-blue-50 to-indigo-50 p-6 rounded-xl border border-blue-200 shadow-sm">
@@ -345,9 +356,6 @@ export function PortfolioAnalytics({
                 tickSize: 5,
                 tickPadding: 8,
                 tickRotation: 0,
-                legend: 'P&L ($)',
-                legendPosition: 'middle',
-                legendOffset: -50,
                 format: (value) => formatCurrency(value)
               }}
               labelSkipWidth={16}
@@ -396,9 +404,6 @@ export function PortfolioAnalytics({
               tickSize: 5,
               tickPadding: 5,
               tickRotation: 0,
-              legend: 'Monthly Income ($)',
-              legendOffset: -40,
-              legendPosition: 'middle',
               format: (value) => formatCurrency(Number(value))
             }}
             pointSize={10}

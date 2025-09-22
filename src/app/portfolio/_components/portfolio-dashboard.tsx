@@ -22,6 +22,7 @@ export function PortfolioDashboard() {
     { portfolioId: selectedPortfolioId! },
     { enabled: !!selectedPortfolioId }
   );
+  const utils = api.useUtils();
 
   // Auto-select the main portfolio or first portfolio
   React.useEffect(() => {
@@ -128,24 +129,27 @@ export function PortfolioDashboard() {
       {/* Main Content */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {selectedPortfolioId && portfolioSummary ? (
-          <PortfolioAnalytics
-            positions={portfolioSummary.positions.map(pos => ({
-              id: pos.id,
-              ticker: pos.ticker,
-              shares: pos.shares,
-              purchasePrice: pos.purchasePrice,
-              currentPrice: pos.currentPrice ?? pos.purchasePrice,
-              dividendYield: pos.dividendYield ?? undefined,
-              purchaseDate: pos.purchaseDate,
-            }))}
-            totalInvested={portfolioSummary.summary.totalInvested}
-            currentValue={portfolioSummary.summary.totalCurrentValue}
-            unrealizedPnL={portfolioSummary.summary.totalUnrealizedGainLoss}
-            annualDividends={portfolioSummary.summary.totalAnnualDividends}
-            portfolioId={selectedPortfolioId}
-            monthlyDividendGoal={portfolioSummary.portfolio.monthlyDividendGoal}
-            annualDividendGoal={portfolioSummary.portfolio.annualDividendGoal}
-          />
+          <>
+            <PortfolioAnalytics
+              positions={portfolioSummary.positions.map(pos => ({
+                id: pos.id,
+                ticker: pos.ticker,
+                shares: pos.shares,
+                purchasePrice: pos.purchasePrice,
+                currentPrice: pos.currentPrice ?? pos.purchasePrice,
+                dividendYield: pos.dividendYield ?? undefined,
+                purchaseDate: pos.purchaseDate,
+              }))}
+              totalInvested={portfolioSummary.summary.totalInvested}
+              currentValue={portfolioSummary.summary.totalCurrentValue}
+              unrealizedPnL={portfolioSummary.summary.totalUnrealizedGainLoss}
+              annualDividends={portfolioSummary.summary.totalAnnualDividends}
+              portfolioId={selectedPortfolioId}
+              monthlyDividendGoal={portfolioSummary.portfolio.monthlyDividendGoal}
+              annualDividendGoal={portfolioSummary.portfolio.annualDividendGoal}
+              currentPositions={portfolioSummary.positions.map(pos => ({ ticker: pos.ticker }))}
+            />
+          </>
         ) : (
           <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-12 text-center">
             <div className="mx-auto w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mb-6">
@@ -174,7 +178,7 @@ export function PortfolioDashboard() {
           onClose={() => setShowCreatePortfolio(false)}
           onSuccess={() => {
             setShowCreatePortfolio(false);
-            void api.useUtils().portfolio.getAll.invalidate();
+            void utils.portfolio.getAll.invalidate();
           }}
         />
       )}
@@ -189,9 +193,9 @@ export function PortfolioDashboard() {
           onSuccess={() => {
             setShowEditPortfolio(false);
             setEditingPortfolio(null);
-            void api.useUtils().portfolio.getAll.invalidate();
+            void utils.portfolio.getAll.invalidate();
             if (selectedPortfolioId) {
-              void api.useUtils().position.getPortfolioSummary.invalidate({ portfolioId: selectedPortfolioId });
+              void utils.position.getPortfolioSummary.invalidate({ portfolioId: selectedPortfolioId });
             }
           }}
         />
@@ -203,7 +207,7 @@ export function PortfolioDashboard() {
           onClose={() => setShowAddPosition(false)}
           onSuccess={() => {
             setShowAddPosition(false);
-            void api.useUtils().position.getPortfolioSummary.invalidate({ portfolioId: selectedPortfolioId });
+            void utils.position.getPortfolioSummary.invalidate({ portfolioId: selectedPortfolioId });
           }}
         />
       )}
@@ -219,7 +223,7 @@ export function PortfolioDashboard() {
             setShowEditPosition(false);
             setEditingPosition(null);
             if (selectedPortfolioId) {
-              void api.useUtils().position.getPortfolioSummary.invalidate({ portfolioId: selectedPortfolioId });
+              void utils.position.getPortfolioSummary.invalidate({ portfolioId: selectedPortfolioId });
             }
           }}
         />
@@ -233,10 +237,11 @@ function PositionList({ portfolioId, onEditPosition }: { portfolioId: string; on
   const { data: portfolioData, isLoading } = api.position.getPortfolioSummary.useQuery({ 
     portfolioId 
   });
+  const utils = api.useUtils();
 
   const deletePosition = api.position.delete.useMutation({
     onSuccess: () => {
-      void api.useUtils().position.getPortfolioSummary.invalidate({ portfolioId });
+      void utils.position.getPortfolioSummary.invalidate({ portfolioId });
     },
   });
 

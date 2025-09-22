@@ -6,6 +6,7 @@ import { SessionProvider } from "next-auth/react";
 
 import { TRPCReactProvider } from "~/trpc/react";
 import { Navigation } from "./_components/navigation";
+import Footer from "./_components/footer";
 
 export const metadata: Metadata = {
   title: "Dividnd - Dividend Stock Portfolio Tracker",
@@ -26,8 +27,13 @@ export default function RootLayout({
       <body>
         <SessionProvider>
           <TRPCReactProvider>
-            <Navigation />
-            {children}
+            <div className="min-h-screen flex flex-col">
+              <Navigation />
+              <main className="flex-1">
+                {children}
+              </main>
+              <Footer />
+            </div>
           </TRPCReactProvider>
         </SessionProvider>
       </body>

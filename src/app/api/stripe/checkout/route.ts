@@ -71,6 +71,7 @@ export async function POST(request: NextRequest) {
       mode: 'subscription',
       success_url: `${process.env.NEXTAUTH_URL}/portfolio?success=true`,
       cancel_url: `${process.env.NEXTAUTH_URL}/pricing?canceled=true`,
+      allow_promotion_codes: true, // Enable discount codes
       metadata: {
         userId: session.user.id,
       },

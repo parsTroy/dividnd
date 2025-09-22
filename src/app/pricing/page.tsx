@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useState } from 'react';
 import { useSession } from 'next-auth/react';
 import { PRICING_PLANS } from '~/lib/pricing';
+import { NewsletterSignup } from '~/components/newsletter-signup';
 
 export default function PricingPage() {
   const { data: session } = useSession();
@@ -210,6 +211,11 @@ export default function PricingPage() {
               </tbody>
             </table>
           </div>
+        </div>
+
+        {/* Newsletter Signup */}
+        <div className="mb-16">
+          <NewsletterSignup className="max-w-2xl mx-auto" />
         </div>
 
         {/* FAQ Section */}

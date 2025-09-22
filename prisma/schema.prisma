@@ -147,3 +147,20 @@ model Subscription {
   @@index([stripeCustomerId])
   @@index([stripeSubscriptionId])
 }
+
+// Newsletter subscriptions
+model NewsletterSubscription {
+  id                String    @id @default(cuid())
+  email             String    @unique
+  isConfirmed       Boolean   @default(false)
+  confirmationToken String    @unique
+  discountCode      String?   @unique
+  discountUsed      Boolean   @default(false)
+  subscribedAt      DateTime  @default(now())
+  confirmedAt       DateTime?
+  unsubscribedAt    DateTime?
+
+  @@index([email])
+  @@index([confirmationToken])
+  @@index([discountCode])
+}

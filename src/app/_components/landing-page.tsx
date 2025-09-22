@@ -217,7 +217,7 @@ export function LandingPage({ isAuthenticated, userName }: LandingPageProps) {
             <h2 className="heading-2 text-white">
               Ready to start building wealth through dividends?
             </h2>
-            <p className="mt-4 body-large text-[var(--color-primary-100)]">
+            <p className="mt-4 body-large text-white/90">
               Join thousands of investors who trust Dividnd to track their dividend portfolios
             </p>
             <div className="mt-8">
@@ -228,7 +228,7 @@ export function LandingPage({ isAuthenticated, userName }: LandingPageProps) {
                 Get Started Free
               </Link>
             </div>
-            <p className="mt-4 caption text-[var(--color-primary-200)]">
+            <p className="mt-4 caption text-white/80">
               No credit card required • 14-day free trial • Cancel anytime
             </p>
           </div>

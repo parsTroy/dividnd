@@ -54,7 +54,7 @@ export const authConfig = {
       user: {
         ...session.user,
         id: user.id,
-        createdAt: user.createdAt,
+        createdAt: (user as any).createdAt || new Date(),
       },
     }),
   },

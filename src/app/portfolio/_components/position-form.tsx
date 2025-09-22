@@ -21,6 +21,7 @@ export function PositionForm({ portfolioId, onClose, onSuccess }: PositionFormPr
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isLoadingStockData, setIsLoadingStockData] = useState(false);
   const [stockData, setStockData] = useState<any>(null);
+  const [error, setError] = useState<string | null>(null);
 
   const utils = api.useUtils();
 
@@ -28,6 +29,10 @@ export function PositionForm({ portfolioId, onClose, onSuccess }: PositionFormPr
     onSuccess: () => {
       utils.position.getPortfolioSummary.invalidate({ portfolioId });
       onSuccess();
+    },
+    onError: (error) => {
+      setError(error.message);
+      setIsSubmitting(false);
     },
   });
 
@@ -85,6 +90,7 @@ export function PositionForm({ portfolioId, onClose, onSuccess }: PositionFormPr
       return;
     }
 
+    setError(null);
     setIsSubmitting(true);
     try {
       await createPosition.mutateAsync({
@@ -97,9 +103,7 @@ export function PositionForm({ portfolioId, onClose, onSuccess }: PositionFormPr
         dividendYield,
       });
     } catch (error) {
-      console.error("Failed to create position:", error);
-    } finally {
-      setIsSubmitting(false);
+      // Error is handled by onError callback
     }
   };
 
@@ -133,6 +137,34 @@ export function PositionForm({ portfolioId, onClose, onSuccess }: PositionFormPr
           <div className="p-6">
         
             <form onSubmit={handleSubmit} className="space-y-4">
+              {/* Error Display */}
+              {error && (
+                <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+                  <div className="flex">
+                    <div className="flex-shrink-0">
+                      <svg className="h-5 w-5 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                    </div>
+                    <div className="ml-3">
+                      <h3 className="text-sm font-medium text-red-800">
+                        Position Limit Reached
+                      </h3>
+                      <div className="mt-2 text-sm text-red-700">
+                        <p>{error}</p>
+                        <div className="mt-3">
+                          <a
+                            href="/pricing"
+                            className="inline-flex items-center px-3 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                          >
+                            Upgrade to Premium
+                          </a>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
           <div>
             <label htmlFor="ticker" className="block text-sm font-medium text-gray-700 mb-2">
               Stock Ticker *

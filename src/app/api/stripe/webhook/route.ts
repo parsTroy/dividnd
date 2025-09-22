@@ -29,22 +29,22 @@ export async function POST(request: NextRequest) {
         const userId = session.metadata?.userId;
 
         if (!userId) {
-          console.error('No userId in checkout session metadata');
+          console.error('No userId in session metadata');
           break;
         }
 
-        // Get the subscription
-        const subscription = await stripe.subscriptions.retrieve(session.subscription as string);
+        // Get the subscription from the session
+        const subscriptionId = session.subscription as string;
+        if (!subscriptionId) {
+          console.error('No subscription ID in session');
+          break;
+        }
+
+        const subscription = await stripe.subscriptions.retrieve(subscriptionId);
         const priceId = subscription.items.data[0]?.price.id;
-        
+
         if (!priceId) {
           console.error('No price ID found in subscription');
-          break;
-        }
-
-        const tier = getSubscriptionTierFromPriceId(priceId);
-        if (!tier) {
-          console.error('Invalid price ID:', priceId);
           break;
         }
 
@@ -58,131 +58,157 @@ export async function POST(request: NextRequest) {
             stripePriceId: priceId,
             stripeProductId: subscription.items.data[0]?.price.product as string,
             status: subscription.status,
-            currentPeriodStart: new Date(subscription.current_period_start * 1000),
-            currentPeriodEnd: new Date(subscription.current_period_end * 1000),
-            cancelAtPeriodEnd: subscription.cancel_at_period_end,
-            trialStart: subscription.trial_start ? new Date(subscription.trial_start * 1000) : null,
-            trialEnd: subscription.trial_end ? new Date(subscription.trial_end * 1000) : null,
+            currentPeriodStart: new Date((subscription as any).current_period_start * 1000),
+            currentPeriodEnd: new Date((subscription as any).current_period_end * 1000),
+            cancelAtPeriodEnd: (subscription as any).cancel_at_period_end,
+            trialStart: (subscription as any).trial_start ? new Date((subscription as any).trial_start * 1000) : null,
+            trialEnd: (subscription as any).trial_end ? new Date((subscription as any).trial_end * 1000) : null,
           },
           update: {
             stripeSubscriptionId: subscription.id,
             stripePriceId: priceId,
             stripeProductId: subscription.items.data[0]?.price.product as string,
             status: subscription.status,
-            currentPeriodStart: new Date(subscription.current_period_start * 1000),
-            currentPeriodEnd: new Date(subscription.current_period_end * 1000),
-            cancelAtPeriodEnd: subscription.cancel_at_period_end,
-            trialStart: subscription.trial_start ? new Date(subscription.trial_start * 1000) : null,
-            trialEnd: subscription.trial_end ? new Date(subscription.trial_end * 1000) : null,
+            currentPeriodStart: new Date((subscription as any).current_period_start * 1000),
+            currentPeriodEnd: new Date((subscription as any).current_period_end * 1000),
+            cancelAtPeriodEnd: (subscription as any).cancel_at_period_end,
+            trialStart: (subscription as any).trial_start ? new Date((subscription as any).trial_start * 1000) : null,
+            trialEnd: (subscription as any).trial_end ? new Date((subscription as any).trial_end * 1000) : null,
           },
         });
 
+        console.log(`Subscription created for user ${userId}`);
         break;
       }
 
       case 'customer.subscription.updated': {
         const subscription = event.data.object as Stripe.Subscription;
-        const priceId = subscription.items.data[0]?.price.id;
-        
-        if (!priceId) {
-          console.error('No price ID found in subscription update');
-          break;
-        }
+        const customerId = subscription.customer as string;
 
-        const tier = getSubscriptionTierFromPriceId(priceId);
-        if (!tier) {
-          console.error('Invalid price ID in subscription update:', priceId);
-          break;
-        }
-
-        // Find subscription by Stripe subscription ID
-        const existingSubscription = await db.subscription.findUnique({
-          where: { stripeSubscriptionId: subscription.id },
+        // Find user by customer ID
+        const userSubscription = await db.subscription.findUnique({
+          where: { stripeCustomerId: customerId },
         });
 
-        if (existingSubscription) {
-          await db.subscription.update({
-            where: { id: existingSubscription.id },
-            data: {
-              stripePriceId: priceId,
-              stripeProductId: subscription.items.data[0]?.price.product as string,
-              status: subscription.status,
-              currentPeriodStart: new Date(subscription.current_period_start * 1000),
-              currentPeriodEnd: new Date(subscription.current_period_end * 1000),
-              cancelAtPeriodEnd: subscription.cancel_at_period_end,
-              trialStart: subscription.trial_start ? new Date(subscription.trial_start * 1000) : null,
-              trialEnd: subscription.trial_end ? new Date(subscription.trial_end * 1000) : null,
-            },
-          });
+        if (!userSubscription) {
+          console.error('No subscription found for customer:', customerId);
+          break;
         }
 
+        const priceId = subscription.items.data[0]?.price.id;
+
+        await db.subscription.update({
+          where: { userId: userSubscription.userId },
+          data: {
+            stripeSubscriptionId: subscription.id,
+            stripePriceId: priceId,
+            stripeProductId: subscription.items.data[0]?.price.product as string,
+            status: subscription.status,
+            currentPeriodStart: new Date((subscription as any).current_period_start * 1000),
+            currentPeriodEnd: new Date((subscription as any).current_period_end * 1000),
+            cancelAtPeriodEnd: (subscription as any).cancel_at_period_end,
+            trialStart: (subscription as any).trial_start ? new Date((subscription as any).trial_start * 1000) : null,
+            trialEnd: (subscription as any).trial_end ? new Date((subscription as any).trial_end * 1000) : null,
+          },
+        });
+
+        console.log(`Subscription updated for user ${userSubscription.userId}`);
         break;
       }
 
       case 'customer.subscription.deleted': {
         const subscription = event.data.object as Stripe.Subscription;
+        const customerId = subscription.customer as string;
 
-        // Find and update subscription
-        const existingSubscription = await db.subscription.findUnique({
-          where: { stripeSubscriptionId: subscription.id },
+        // Find user by customer ID
+        const userSubscription = await db.subscription.findUnique({
+          where: { stripeCustomerId: customerId },
         });
 
-        if (existingSubscription) {
-          await db.subscription.update({
-            where: { id: existingSubscription.id },
-            data: {
-              status: 'canceled',
-              canceledAt: new Date(),
-            },
-          });
+        if (!userSubscription) {
+          console.error('No subscription found for customer:', customerId);
+          break;
         }
 
+        await db.subscription.update({
+          where: { userId: userSubscription.userId },
+          data: {
+            status: 'canceled',
+            canceledAt: new Date(),
+          },
+        });
+
+        console.log(`Subscription canceled for user ${userSubscription.userId}`);
         break;
       }
 
       case 'invoice.payment_succeeded': {
         const invoice = event.data.object as Stripe.Invoice;
-        
-        if (invoice.subscription) {
-          const subscription = await stripe.subscriptions.retrieve(invoice.subscription as string);
-          
-          const existingSubscription = await db.subscription.findUnique({
-            where: { stripeSubscriptionId: subscription.id },
-          });
+        const subscriptionId = (invoice as any).subscription as string;
 
-          if (existingSubscription) {
-            await db.subscription.update({
-              where: { id: existingSubscription.id },
-              data: {
-                status: subscription.status,
-                currentPeriodStart: new Date(subscription.current_period_start * 1000),
-                currentPeriodEnd: new Date(subscription.current_period_end * 1000),
-              },
-            });
-          }
+        if (!subscriptionId) {
+          console.log('No subscription ID in invoice, skipping');
+          break;
         }
 
+        const subscription = await stripe.subscriptions.retrieve(subscriptionId);
+        const customerId = subscription.customer as string;
+
+        // Find user by customer ID
+        const userSubscription = await db.subscription.findUnique({
+          where: { stripeCustomerId: customerId },
+        });
+
+        if (!userSubscription) {
+          console.error('No subscription found for customer:', customerId);
+          break;
+        }
+
+        const priceId = subscription.items.data[0]?.price.id;
+
+        await db.subscription.update({
+          where: { userId: userSubscription.userId },
+          data: {
+            status: subscription.status,
+            currentPeriodStart: new Date((subscription as any).current_period_start * 1000),
+            currentPeriodEnd: new Date((subscription as any).current_period_end * 1000),
+          },
+        });
+
+        console.log(`Payment succeeded for user ${userSubscription.userId}`);
         break;
       }
 
       case 'invoice.payment_failed': {
         const invoice = event.data.object as Stripe.Invoice;
-        
-        if (invoice.subscription) {
-          const existingSubscription = await db.subscription.findUnique({
-            where: { stripeSubscriptionId: invoice.subscription as string },
-          });
+        const subscriptionId = (invoice as any).subscription as string;
 
-          if (existingSubscription) {
-            await db.subscription.update({
-              where: { id: existingSubscription.id },
-              data: {
-                status: 'past_due',
-              },
-            });
-          }
+        if (!subscriptionId) {
+          console.log('No subscription ID in invoice, skipping');
+          break;
         }
 
+        const subscription = await stripe.subscriptions.retrieve(subscriptionId);
+        const customerId = subscription.customer as string;
+
+        // Find user by customer ID
+        const userSubscription = await db.subscription.findUnique({
+          where: { stripeCustomerId: customerId },
+        });
+
+        if (!userSubscription) {
+          console.error('No subscription found for customer:', customerId);
+          break;
+        }
+
+        await db.subscription.update({
+          where: { userId: userSubscription.userId },
+          data: {
+            status: 'past_due',
+          },
+        });
+
+        console.log(`Payment failed for user ${userSubscription.userId}`);
         break;
       }
 
@@ -192,9 +218,9 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ received: true });
   } catch (error) {
-    console.error('Error processing webhook:', error);
+    console.error('Webhook handler error:', error);
     return NextResponse.json(
-      { error: 'Webhook processing failed' },
+      { error: 'Webhook handler failed' },
       { status: 500 }
     );
   }

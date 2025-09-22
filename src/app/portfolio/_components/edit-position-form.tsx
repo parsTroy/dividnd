@@ -82,9 +82,9 @@ export function EditPositionForm({ position, onClose, onSuccess }: EditPositionF
       ticker: formData.ticker.toUpperCase(),
       shares: parseFloat(formData.shares),
       purchasePrice: parseFloat(formData.purchasePrice),
-      purchaseDate: new Date(formData.purchaseDate),
-      currentPrice: formData.currentPrice ? parseFloat(formData.currentPrice) : null,
-      dividendYield: formData.dividendYield ? parseFloat(formData.dividendYield) : null,
+      purchaseDate: new Date(formData.purchaseDate || new Date()),
+      currentPrice: formData.currentPrice ? parseFloat(formData.currentPrice) : undefined,
+      dividendYield: formData.dividendYield ? parseFloat(formData.dividendYield) : undefined,
     });
   };
 

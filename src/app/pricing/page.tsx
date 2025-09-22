@@ -1,4 +1,4 @@
-import { Metadata } from "next";
+import { type Metadata } from "next";
 import Link from "next/link";
 
 export const metadata: Metadata = {
@@ -12,7 +12,7 @@ export default function PricingPage() {
       name: "Free",
       price: "$0",
       period: "forever",
-      description: "Perfect for getting started with dividend tracking",
+      description: "Perfect for beginners starting their dividend journey",
       features: [
         "Up to 2 portfolios",
         "Up to 50 stock positions",
@@ -26,10 +26,10 @@ export default function PricingPage() {
       popular: false
     },
     {
-      name: "Pro",
-      price: "$9.99",
+      name: "Premium Monthly",
+      price: "$7.99",
       period: "per month",
-      description: "Advanced features for serious dividend investors",
+      description: "Ideal for active investors building their portfolio",
       features: [
         "Unlimited portfolios",
         "Unlimited stock positions",
@@ -40,27 +40,27 @@ export default function PricingPage() {
         "Priority email support",
         "API access"
       ],
-      cta: "Start Pro Trial",
+      cta: "Start Premium Trial",
       ctaLink: "/signin",
       popular: true
     },
     {
-      name: "Enterprise",
-      price: "Custom",
-      period: "pricing",
-      description: "Tailored solutions for institutions and teams",
+      name: "Premium Annual",
+      price: "$79",
+      period: "per year",
+      description: "Best value for committed dividend investors",
       features: [
-        "Everything in Pro",
-        "Custom integrations",
-        "Dedicated account manager",
-        "White-label options",
-        "Advanced security features",
-        "24/7 phone support",
-        "Custom reporting",
-        "SLA guarantees"
+        "Everything in Premium Monthly",
+        "2 months free (17% savings)",
+        "Priority feature requests",
+        "Advanced portfolio analytics",
+        "Custom dividend calendars",
+        "Priority customer support",
+        "Early access to new features",
+        "Dedicated account manager"
       ],
-      cta: "Contact Sales",
-      ctaLink: "/contact",
+      cta: "Start Annual Plan",
+      ctaLink: "/signin",
       popular: false
     }
   ];
@@ -165,8 +165,8 @@ export default function PricingPage() {
                 <tr>
                   <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900">Features</th>
                   <th className="px-6 py-4 text-center text-sm font-semibold text-gray-900">Free</th>
-                  <th className="px-6 py-4 text-center text-sm font-semibold text-gray-900">Pro</th>
-                  <th className="px-6 py-4 text-center text-sm font-semibold text-gray-900">Enterprise</th>
+                  <th className="px-6 py-4 text-center text-sm font-semibold text-gray-900">Premium Monthly</th>
+                  <th className="px-6 py-4 text-center text-sm font-semibold text-gray-900">Premium Annual</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-200">
@@ -210,7 +210,13 @@ export default function PricingPage() {
                   <td className="px-6 py-4 text-sm text-gray-900">Support</td>
                   <td className="px-6 py-4 text-center text-sm text-gray-600">Email</td>
                   <td className="px-6 py-4 text-center text-sm text-gray-600">Priority Email</td>
-                  <td className="px-6 py-4 text-center text-sm text-gray-600">24/7 Phone</td>
+                  <td className="px-6 py-4 text-center text-sm text-gray-600">Priority Support</td>
+                </tr>
+                <tr>
+                  <td className="px-6 py-4 text-sm text-gray-900">Savings</td>
+                  <td className="px-6 py-4 text-center text-sm text-gray-600">-</td>
+                  <td className="px-6 py-4 text-center text-sm text-gray-600">-</td>
+                  <td className="px-6 py-4 text-center text-sm text-green-600 font-semibold">17% Off</td>
                 </tr>
               </tbody>
             </table>

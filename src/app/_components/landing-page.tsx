@@ -69,7 +69,7 @@ export function LandingPage({ isAuthenticated, userName }: LandingPageProps) {
                 </div>
                 <h3 className="heading-4 mb-3">Future Value Calculator</h3>
                 <p className="body-medium">
-                  Project your portfolio's growth with compound interest calculations.
+                  Project your portfolio&apos;s growth with compound interest calculations.
                 </p>
               </Link>
             </div>
@@ -191,7 +191,7 @@ export function LandingPage({ isAuthenticated, userName }: LandingPageProps) {
               </div>
               <h3 className="heading-4 mb-4">Future Value Calculator</h3>
               <p className="body-medium">
-                Project your portfolio's growth with compound interest calculations and regular deposit scenarios.
+                Project your portfolio&apos;s growth with compound interest calculations and regular deposit scenarios.
               </p>
             </div>
 

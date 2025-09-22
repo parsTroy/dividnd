@@ -1,4 +1,5 @@
-import { NextRequest, NextResponse } from 'next/server';
+import type { NextRequest } from 'next/server';
+import { NextResponse } from 'next/server';
 import { db } from '~/server/db';
 import { sendNewsletterWelcomeEmail } from '~/lib/email';
 
@@ -45,7 +46,7 @@ export async function GET(request: NextRequest) {
     // Send welcome email with discount code
     await sendNewsletterWelcomeEmail({
       email: subscription.email,
-      discountCode: subscription.discountCode || 'NEWSLETTER15',
+      discountCode: subscription.discountCode ?? 'NEWSLETTER15',
     });
 
     return NextResponse.json({

@@ -5,6 +5,7 @@
  * Run this after deploying to Vercel
  */
 
+// @ts-nocheck
 const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
 
 async function createWebhook() {

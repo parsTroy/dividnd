@@ -1,4 +1,5 @@
-import { NextRequest, NextResponse } from 'next/server';
+import type { NextRequest } from 'next/server';
+import { NextResponse } from 'next/server';
 import { z } from 'zod';
 import { db } from '~/server/db';
 import { sendNewsletterConfirmationEmail } from '~/lib/email';
@@ -30,7 +31,7 @@ export async function POST(request: NextRequest) {
         await sendNewsletterConfirmationEmail({
           email,
           confirmationToken: existingSubscription.confirmationToken,
-          discountCode: existingSubscription.discountCode || 'NEWSLETTER15',
+          discountCode: existingSubscription.discountCode ?? 'NEWSLETTER15',
         });
 
         return NextResponse.json({
@@ -67,7 +68,7 @@ export async function POST(request: NextRequest) {
     
     if (error instanceof z.ZodError) {
       return NextResponse.json(
-        { error: error.errors[0]?.message || 'Invalid input' },
+        { error: error.errors[0]?.message ?? 'Invalid input' },
         { status: 400 }
       );
     }

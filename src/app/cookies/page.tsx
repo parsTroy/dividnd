@@ -75,7 +75,7 @@ export default function CookiesPage() {
                   Cookies are small text files that are placed on your computer or mobile device when you visit our website. They are widely used to make websites work more efficiently and to provide information to website owners.
                 </p>
                 <p className="text-gray-700 mb-4">
-                  Dividnd uses cookies to enhance your experience, analyze site usage, and provide personalized content. This Cookie Policy explains how we use cookies and similar technologies on our website.
+                  <span className="text-[var(--color-primary-600)]">Dividnd</span> uses cookies to enhance your experience, analyze site usage, and provide personalized content. This Cookie Policy explains how we use cookies and similar technologies on our website.
                 </p>
               </section>
 

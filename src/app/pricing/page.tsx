@@ -240,7 +240,7 @@ export default function PricingPage() {
         <div className="bg-gradient-to-r from-blue-600 to-indigo-600 rounded-2xl p-8 text-center text-white">
           <h2 className="text-3xl font-bold mb-4">Ready to Start Tracking?</h2>
           <p className="text-xl mb-8 opacity-90">
-            Join thousands of investors who trust Dividnd for their dividend portfolio management
+            Join thousands of investors who trust <span className="text-[var(--color-primary-600)]">Dividnd</span> for their dividend portfolio management
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Link

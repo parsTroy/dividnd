@@ -21,14 +21,14 @@ export default function TermsPage() {
               <section className="mb-8">
                 <h2 className="text-2xl font-semibold text-gray-900 mb-4">1. Acceptance of Terms</h2>
                 <p className="text-gray-700 mb-4">
-                  By accessing and using Dividnd ("the Service"), you accept and agree to be bound by the terms and provision of this agreement. If you do not agree to abide by the above, please do not use this service.
+                  By accessing and using <span className="text-[var(--color-primary-600)]">Dividnd</span> ("the Service"), you accept and agree to be bound by the terms and provision of this agreement. If you do not agree to abide by the above, please do not use this service.
                 </p>
               </section>
 
               <section className="mb-8">
                 <h2 className="text-2xl font-semibold text-gray-900 mb-4">2. Description of Service</h2>
                 <p className="text-gray-700 mb-4">
-                  Dividnd is a web-based platform that provides portfolio tracking, dividend analysis, and investment tools for individual investors. Our service includes:
+                  <span className="text-[var(--color-primary-600)]">Dividnd</span> is a web-based platform that provides portfolio tracking, dividend analysis, and investment tools for individual investors. Our service includes:
                 </p>
                 <ul className="list-disc pl-6 text-gray-700 mb-4">
                   <li>Portfolio tracking and management</li>
@@ -63,7 +63,7 @@ export default function TermsPage() {
               <section className="mb-8">
                 <h2 className="text-2xl font-semibold text-gray-900 mb-4">5. Investment Disclaimer</h2>
                 <p className="text-gray-700 mb-4">
-                  <strong>Important:</strong> Dividnd is not a registered investment advisor, broker-dealer, or financial advisor. The information provided on our platform is for educational and informational purposes only and should not be construed as investment advice.
+                  <strong>Important:</strong> <span className="text-[var(--color-primary-600)]">Dividnd</span> is not a registered investment advisor, broker-dealer, or financial advisor. The information provided on our platform is for educational and informational purposes only and should not be construed as investment advice.
                 </p>
                 <ul className="list-disc pl-6 text-gray-700 mb-4">
                   <li>All investment decisions are your sole responsibility</li>
@@ -96,7 +96,7 @@ export default function TermsPage() {
               <section className="mb-8">
                 <h2 className="text-2xl font-semibold text-gray-900 mb-4">8. Limitation of Liability</h2>
                 <p className="text-gray-700 mb-4">
-                  In no event shall Dividnd, nor its directors, employees, partners, agents, suppliers, or affiliates, be liable for any indirect, incidental, special, consequential, or punitive damages, including without limitation, loss of profits, data, use, goodwill, or other intangible losses, resulting from your use of the Service.
+                  In no event shall <span className="text-[var(--color-primary-600)]">Dividnd</span>, nor its directors, employees, partners, agents, suppliers, or affiliates, be liable for any indirect, incidental, special, consequential, or punitive damages, including without limitation, loss of profits, data, use, goodwill, or other intangible losses, resulting from your use of the Service.
                 </p>
               </section>
 

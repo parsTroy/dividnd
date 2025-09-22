@@ -134,7 +134,7 @@ export default function FeaturesPage() {
         <div className="bg-gradient-to-r from-blue-600 to-indigo-600 rounded-2xl p-8 text-center text-white">
           <h2 className="text-3xl font-bold mb-4">Ready to Get Started?</h2>
           <p className="text-xl mb-8 opacity-90">
-            Join thousands of investors who trust Dividnd to track their dividend portfolios
+            Join thousands of investors who trust <span className="text-[var(--color-primary-600)]">Dividnd</span> to track their dividend portfolios
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Link
@@ -155,7 +155,7 @@ export default function FeaturesPage() {
         {/* Additional Info */}
         <div className="mt-16 grid grid-cols-1 lg:grid-cols-2 gap-12">
           <div>
-            <h3 className="text-2xl font-bold text-gray-900 mb-6">Why Choose Dividnd?</h3>
+            <h3 className="text-2xl font-bold text-gray-900 mb-6">Why Choose <span className="text-[var(--color-primary-600)]">Dividnd</span>?</h3>
             <div className="space-y-6">
               <div className="flex items-start">
                 <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center mr-4 mt-1">

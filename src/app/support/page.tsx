@@ -49,7 +49,7 @@ export default function SupportPage() {
         <div className="text-center mb-12">
           <h1 className="text-4xl font-bold text-gray-900 mb-4">Help Center</h1>
           <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-            Find answers to common questions and get the most out of your Dividnd experience
+            Find answers to common questions and get the most out of your <span className="text-[var(--color-primary-600)]">Dividnd</span> experience
           </p>
         </div>
 
@@ -64,7 +64,7 @@ export default function SupportPage() {
               </div>
             </div>
             <h3 className="text-lg font-semibold text-gray-900 mb-2">Getting Started</h3>
-            <p className="text-gray-600 mb-4">New to Dividnd? Learn the basics of portfolio tracking and dividend analysis.</p>
+            <p className="text-gray-600 mb-4">New to <span className="text-[var(--color-primary-600)]">Dividnd</span>? Learn the basics of portfolio tracking and dividend analysis.</p>
             <Link href="#getting-started" className="text-blue-600 hover:text-blue-700 font-medium">
               Learn More →
             </Link>

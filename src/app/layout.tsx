@@ -12,6 +12,28 @@ export const metadata: Metadata = {
   title: "Dividnd - Dividend Stock Portfolio Tracker",
   description: "Track your dividend stock portfolio, calculate expected income, and maximize your passive income investments.",
   icons: [{ rel: "icon", url: "/favicon.ico" }],
+  openGraph: {
+    title: "Dividnd - Build Wealth Through Dividend Investing",
+    description: "Professional dividend portfolio tracking with real-time analytics, income optimization, and advanced portfolio management tools.",
+    url: "https://dividnd.com",
+    siteName: "Dividnd",
+    images: [
+      {
+        url: "/og-image.png",
+        width: 1200,
+        height: 630,
+        alt: "Dividnd - Dividend Investment Platform",
+      },
+    ],
+    locale: "en_US",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Dividnd - Build Wealth Through Dividend Investing",
+    description: "Professional dividend portfolio tracking with real-time analytics and income optimization.",
+    images: ["/og-image.png"],
+  },
 };
 
 const inter = Inter({

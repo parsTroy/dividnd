@@ -57,24 +57,45 @@ export function PortfolioDashboard() {
             {/* Portfolio Selector & Actions */}
             <div className="flex items-center space-x-4">
               {/* Portfolio Dropdown */}
-              <div className="relative">
-                <select
-                  value={selectedPortfolioId || ''}
-                  onChange={(e) => setSelectedPortfolioId(e.target.value || null)}
-                  className="appearance-none bg-white border border-gray-300 rounded-lg px-4 py-2 pr-8 text-sm font-medium text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent min-w-[200px]"
-                >
-                  <option value="">Select Portfolio</option>
-                  {portfolios?.map((portfolio) => (
-                    <option key={portfolio.id} value={portfolio.id}>
-                      {portfolio.name} {portfolio.isMain && '(Main)'}
-                    </option>
-                  ))}
-                </select>
-                <div className="absolute inset-y-0 right-0 flex items-center pr-2 pointer-events-none">
-                  <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                  </svg>
+              <div className="flex items-center space-x-2">
+                <div className="relative">
+                  <select
+                    value={selectedPortfolioId || ''}
+                    onChange={(e) => setSelectedPortfolioId(e.target.value || null)}
+                    className="appearance-none bg-white border border-gray-300 rounded-lg px-4 py-2 pr-8 text-sm font-medium text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent min-w-[200px]"
+                  >
+                    <option value="">Select Portfolio</option>
+                    {portfolios?.map((portfolio) => (
+                      <option key={portfolio.id} value={portfolio.id}>
+                        {portfolio.name} {portfolio.isMain && '(Main)'}
+                      </option>
+                    ))}
+                  </select>
+                  <div className="absolute inset-y-0 right-0 flex items-center pr-2 pointer-events-none">
+                    <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                    </svg>
+                  </div>
                 </div>
+                
+                {/* Edit Portfolio Button */}
+                {selectedPortfolioId && (
+                  <button
+                    onClick={() => {
+                      const portfolio = portfolios?.find(p => p.id === selectedPortfolioId);
+                      if (portfolio) {
+                        setEditingPortfolio(portfolio);
+                        setShowEditPortfolio(true);
+                      }
+                    }}
+                    className="inline-flex items-center px-3 py-2 border border-gray-300 text-sm font-medium rounded-lg text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors"
+                    title="Edit Portfolio"
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                    </svg>
+                  </button>
+                )}
               </div>
 
               {/* Action Buttons */}
@@ -149,6 +170,22 @@ export function PortfolioDashboard() {
               annualDividendGoal={portfolioSummary.portfolio.annualDividendGoal}
               currentPositions={portfolioSummary.positions.map(pos => ({ ticker: pos.ticker }))}
             />
+            
+            {/* Positions Table */}
+            <div className="mt-8">
+              <div className="bg-white shadow-sm border border-gray-200 rounded-xl">
+                <div className="px-6 py-4 border-b border-gray-200">
+                  <h3 className="text-lg font-semibold text-gray-900">Positions</h3>
+                </div>
+                <PositionList
+                  portfolioId={selectedPortfolioId}
+                  onEditPosition={(position) => {
+                    setEditingPosition(position);
+                    setShowEditPosition(true);
+                  }}
+                />
+              </div>
+            </div>
           </>
         ) : (
           <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-12 text-center">

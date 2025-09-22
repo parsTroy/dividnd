@@ -18,6 +18,8 @@ export const env = createEnv({
     DATABASE_URL: z.string().url(),
     ALPHAVANTAGE_KEY: z.string().optional(),
     FINNHUB_KEY: z.string().optional(),
+    STRIPE_SECRET_KEY: z.string(),
+    STRIPE_WEBHOOK_SECRET: z.string(),
     NODE_ENV: z
       .enum(["development", "test", "production"])
       .default("development"),
@@ -29,7 +31,7 @@ export const env = createEnv({
    * `NEXT_PUBLIC_`.
    */
   client: {
-    // NEXT_PUBLIC_CLIENTVAR: z.string(),
+    NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY: z.string(),
   },
 
   /**
@@ -45,6 +47,9 @@ export const env = createEnv({
     DATABASE_URL: process.env.DATABASE_URL,
     ALPHAVANTAGE_KEY: process.env.ALPHAVANTAGE_KEY,
     FINNHUB_KEY: process.env.FINNHUB_KEY,
+    STRIPE_SECRET_KEY: process.env.STRIPE_SECRET_KEY,
+    STRIPE_WEBHOOK_SECRET: process.env.STRIPE_WEBHOOK_SECRET,
+    NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY: process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY,
     NODE_ENV: process.env.NODE_ENV,
   },
   /**

@@ -1,9 +1,11 @@
 import { z } from "zod";
+import { TRPCError } from "@trpc/server";
 
 import {
   createTRPCRouter,
   protectedProcedure,
 } from "~/server/api/trpc";
+import { getUserSubscription } from "~/lib/subscription";
 
 export const positionRouter = createTRPCRouter({
   // Get all positions for a portfolio
@@ -50,6 +52,24 @@ export const positionRouter = createTRPCRouter({
 
       if (!portfolio) {
         throw new Error("Portfolio not found");
+      }
+
+      // Check subscription limits for positions
+      const subscription = await getUserSubscription(ctx.session.user.id);
+      const existingPositions = await ctx.db.position.count({
+        where: {
+          portfolio: {
+            userId: ctx.session.user.id,
+          },
+        },
+      });
+
+      // Check if user has reached position limit
+      if (subscription.limits.positions !== -1 && existingPositions >= subscription.limits.positions) {
+        throw new TRPCError({
+          code: 'FORBIDDEN',
+          message: `You have reached the maximum number of positions (${subscription.limits.positions}). Upgrade your plan to add more positions.`,
+        });
       }
 
       return ctx.db.position.create({

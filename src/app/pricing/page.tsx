@@ -1,69 +1,52 @@
-import { type Metadata } from "next";
-import Link from "next/link";
+'use client';
 
-export const metadata: Metadata = {
-  title: "Pricing - Dividnd",
-  description: "Choose the perfect plan for your dividend portfolio tracking needs",
-};
+import Link from "next/link";
+import { useState } from 'react';
+import { useSession } from 'next-auth/react';
+import { PRICING_PLANS } from '~/lib/pricing';
 
 export default function PricingPage() {
-  const plans = [
-    {
-      name: "Free",
-      price: "$0",
-      period: "forever",
-      description: "Perfect for beginners starting their dividend journey",
-      features: [
-        "Up to 2 portfolios",
-        "Up to 50 stock positions",
-        "Basic analytics and charts",
-        "Real-time stock data",
-        "Dividend goal tracking",
-        "Email support"
-      ],
-      cta: "Get Started Free",
-      ctaLink: "/signin",
-      popular: false
-    },
-    {
-      name: "Premium Monthly",
-      price: "$7.99",
-      period: "per month",
-      description: "Ideal for active investors building their portfolio",
-      features: [
-        "Unlimited portfolios",
-        "Unlimited stock positions",
-        "Advanced analytics & insights",
-        "Stock suggestions & recommendations",
-        "Future value calculator",
-        "Export to CSV/PDF",
-        "Priority email support",
-        "API access"
-      ],
-      cta: "Start Premium Trial",
-      ctaLink: "/signin",
-      popular: true
-    },
-    {
-      name: "Premium Annual",
-      price: "$79",
-      period: "per year",
-      description: "Best value for committed dividend investors",
-      features: [
-        "Everything in Premium Monthly",
-        "2 months free (17% savings)",
-        "Priority feature requests",
-        "Advanced portfolio analytics",
-        "Custom dividend calendars",
-        "Priority customer support",
-        "Early access to new features",
-        "Dedicated account manager"
-      ],
-      cta: "Start Annual Plan",
-      ctaLink: "/signin",
-      popular: false
+  const { data: session } = useSession();
+  const [isLoading, setIsLoading] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
+  const handleUpgrade = async (priceId: string, planName: string) => {
+    if (!session) {
+      window.location.href = '/signin';
+      return;
     }
-  ];
+
+    setIsLoading(priceId);
+    setError(null);
+
+    try {
+      const response = await fetch('/api/stripe/checkout', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ priceId }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to create checkout session');
+      }
+
+      // Redirect to Stripe Checkout
+      window.location.href = data.url;
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'An error occurred');
+    } finally {
+      setIsLoading(null);
+    }
+  };
+
+  const plans = Object.entries(PRICING_PLANS).map(([tier, plan]) => ({
+    ...plan,
+    tier: tier as keyof typeof PRICING_PLANS,
+  }));
 
   const faqs = [
     {
@@ -103,11 +86,17 @@ export default function PricingPage() {
           </p>
         </div>
 
+        {error && (
+          <div className="mb-6 bg-red-50 border border-red-200 rounded-md p-4 max-w-2xl mx-auto">
+            <p className="text-red-800">{error}</p>
+          </div>
+        )}
+
         {/* Pricing Cards */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-16">
-          {plans.map((plan, index) => (
+          {plans.map((plan) => (
             <div
-              key={index}
+              key={plan.tier}
               className={`relative bg-white rounded-2xl shadow-sm border-2 p-8 ${
                 plan.popular ? 'border-blue-500 ring-2 ring-blue-200' : 'border-gray-200'
               }`}
@@ -123,10 +112,15 @@ export default function PricingPage() {
               <div className="text-center mb-8">
                 <h3 className="text-2xl font-bold text-gray-900 mb-2">{plan.name}</h3>
                 <div className="mb-4">
-                  <span className="text-4xl font-bold text-gray-900">{plan.price}</span>
-                  <span className="text-gray-600 ml-2">{plan.period}</span>
+                  <span className="text-4xl font-bold text-gray-900">${plan.price.monthly}</span>
+                  <span className="text-gray-600 ml-2">/month</span>
                 </div>
                 <p className="text-gray-600">{plan.description}</p>
+                {plan.tier !== 'free' && (
+                  <p className="text-sm text-gray-500 mt-2">
+                    Annual: ${plan.price.annual}/year (Save {Math.round((1 - plan.price.annual / (plan.price.monthly * 12)) * 100)}%)
+                  </p>
+                )}
               </div>
 
               <ul className="space-y-4 mb-8">
@@ -140,16 +134,35 @@ export default function PricingPage() {
                 ))}
               </ul>
 
-              <Link
-                href={plan.ctaLink}
-                className={`w-full block text-center py-3 px-6 rounded-lg font-semibold transition-colors ${
-                  plan.popular
-                    ? 'bg-blue-600 text-white hover:bg-blue-700'
-                    : 'bg-gray-900 text-white hover:bg-gray-800'
-                }`}
-              >
-                {plan.cta}
-              </Link>
+              {plan.tier === 'free' ? (
+                <Link
+                  href="/signin"
+                  className="w-full block text-center py-3 px-6 rounded-lg font-semibold transition-colors bg-gray-900 text-white hover:bg-gray-800"
+                >
+                  Get Started Free
+                </Link>
+              ) : (
+                <div className="space-y-3">
+                  <button
+                    onClick={() => handleUpgrade(plan.stripePriceId.monthly, `${plan.name} Monthly`)}
+                    disabled={isLoading === plan.stripePriceId.monthly}
+                    className={`w-full py-3 px-6 rounded-lg font-semibold transition-colors ${
+                      plan.popular
+                        ? 'bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50'
+                        : 'bg-gray-900 text-white hover:bg-gray-800 disabled:opacity-50'
+                    }`}
+                  >
+                    {isLoading === plan.stripePriceId.monthly ? 'Loading...' : 'Start Monthly Plan'}
+                  </button>
+                  <button
+                    onClick={() => handleUpgrade(plan.stripePriceId.annual, `${plan.name} Annual`)}
+                    disabled={isLoading === plan.stripePriceId.annual}
+                    className="w-full py-2 px-6 rounded-lg font-semibold transition-colors bg-gray-600 text-white hover:bg-gray-700 disabled:opacity-50"
+                  >
+                    {isLoading === plan.stripePriceId.annual ? 'Loading...' : 'Start Annual Plan'}
+                  </button>
+                </div>
+              )}
             </div>
           ))}
         </div>
@@ -165,58 +178,46 @@ export default function PricingPage() {
                 <tr>
                   <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900">Features</th>
                   <th className="px-6 py-4 text-center text-sm font-semibold text-gray-900">Free</th>
-                  <th className="px-6 py-4 text-center text-sm font-semibold text-gray-900">Premium Monthly</th>
-                  <th className="px-6 py-4 text-center text-sm font-semibold text-gray-900">Premium Annual</th>
+                  <th className="px-6 py-4 text-center text-sm font-semibold text-gray-900">Pro</th>
+                  <th className="px-6 py-4 text-center text-sm font-semibold text-gray-900">Premium</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-200">
                 <tr>
                   <td className="px-6 py-4 text-sm text-gray-900">Portfolios</td>
-                  <td className="px-6 py-4 text-center text-sm text-gray-600">2</td>
-                  <td className="px-6 py-4 text-center text-sm text-gray-600">Unlimited</td>
-                  <td className="px-6 py-4 text-center text-sm text-gray-600">Unlimited</td>
+                  <td className="px-6 py-4 text-center text-sm text-gray-600">{PRICING_PLANS.free.limits.portfolios}</td>
+                  <td className="px-6 py-4 text-center text-sm text-gray-600">{PRICING_PLANS.pro.limits.portfolios === -1 ? 'Unlimited' : PRICING_PLANS.pro.limits.portfolios}</td>
+                  <td className="px-6 py-4 text-center text-sm text-gray-600">{PRICING_PLANS.premium.limits.portfolios === -1 ? 'Unlimited' : PRICING_PLANS.premium.limits.portfolios}</td>
                 </tr>
                 <tr>
                   <td className="px-6 py-4 text-sm text-gray-900">Stock Positions</td>
-                  <td className="px-6 py-4 text-center text-sm text-gray-600">50</td>
-                  <td className="px-6 py-4 text-center text-sm text-gray-600">Unlimited</td>
-                  <td className="px-6 py-4 text-center text-sm text-gray-600">Unlimited</td>
+                  <td className="px-6 py-4 text-center text-sm text-gray-600">{PRICING_PLANS.free.limits.positions}</td>
+                  <td className="px-6 py-4 text-center text-sm text-gray-600">{PRICING_PLANS.pro.limits.positions === -1 ? 'Unlimited' : PRICING_PLANS.pro.limits.positions}</td>
+                  <td className="px-6 py-4 text-center text-sm text-gray-600">{PRICING_PLANS.premium.limits.positions === -1 ? 'Unlimited' : PRICING_PLANS.premium.limits.positions}</td>
                 </tr>
                 <tr>
-                  <td className="px-6 py-4 text-sm text-gray-900">Real-time Data</td>
-                  <td className="px-6 py-4 text-center text-sm text-gray-600">✓</td>
-                  <td className="px-6 py-4 text-center text-sm text-gray-600">✓</td>
-                  <td className="px-6 py-4 text-center text-sm text-gray-600">✓</td>
+                  <td className="px-6 py-4 text-sm text-gray-900">API Calls/Month</td>
+                  <td className="px-6 py-4 text-center text-sm text-gray-600">{PRICING_PLANS.free.limits.apiCallsPerMonth}</td>
+                  <td className="px-6 py-4 text-center text-sm text-gray-600">{PRICING_PLANS.pro.limits.apiCallsPerMonth.toLocaleString()}</td>
+                  <td className="px-6 py-4 text-center text-sm text-gray-600">{PRICING_PLANS.premium.limits.apiCallsPerMonth.toLocaleString()}</td>
                 </tr>
                 <tr>
-                  <td className="px-6 py-4 text-sm text-gray-900">Stock Suggestions</td>
-                  <td className="px-6 py-4 text-center text-sm text-gray-600">-</td>
-                  <td className="px-6 py-4 text-center text-sm text-gray-600">✓</td>
-                  <td className="px-6 py-4 text-center text-sm text-gray-600">✓</td>
+                  <td className="px-6 py-4 text-sm text-gray-900">Advanced Analytics</td>
+                  <td className="px-6 py-4 text-center text-sm text-gray-600">{PRICING_PLANS.free.limits.advancedAnalytics ? '✓' : '-'}</td>
+                  <td className="px-6 py-4 text-center text-sm text-gray-600">{PRICING_PLANS.pro.limits.advancedAnalytics ? '✓' : '-'}</td>
+                  <td className="px-6 py-4 text-center text-sm text-gray-600">{PRICING_PLANS.premium.limits.advancedAnalytics ? '✓' : '-'}</td>
                 </tr>
                 <tr>
                   <td className="px-6 py-4 text-sm text-gray-900">Export Data</td>
-                  <td className="px-6 py-4 text-center text-sm text-gray-600">-</td>
-                  <td className="px-6 py-4 text-center text-sm text-gray-600">✓</td>
-                  <td className="px-6 py-4 text-center text-sm text-gray-600">✓</td>
+                  <td className="px-6 py-4 text-center text-sm text-gray-600">{PRICING_PLANS.free.limits.exportData ? '✓' : '-'}</td>
+                  <td className="px-6 py-4 text-center text-sm text-gray-600">{PRICING_PLANS.pro.limits.exportData ? '✓' : '-'}</td>
+                  <td className="px-6 py-4 text-center text-sm text-gray-600">{PRICING_PLANS.premium.limits.exportData ? '✓' : '-'}</td>
                 </tr>
                 <tr>
-                  <td className="px-6 py-4 text-sm text-gray-900">API Access</td>
-                  <td className="px-6 py-4 text-center text-sm text-gray-600">-</td>
-                  <td className="px-6 py-4 text-center text-sm text-gray-600">✓</td>
-                  <td className="px-6 py-4 text-center text-sm text-gray-600">✓</td>
-                </tr>
-                <tr>
-                  <td className="px-6 py-4 text-sm text-gray-900">Support</td>
-                  <td className="px-6 py-4 text-center text-sm text-gray-600">Email</td>
-                  <td className="px-6 py-4 text-center text-sm text-gray-600">Priority Email</td>
-                  <td className="px-6 py-4 text-center text-sm text-gray-600">Priority Support</td>
-                </tr>
-                <tr>
-                  <td className="px-6 py-4 text-sm text-gray-900">Savings</td>
-                  <td className="px-6 py-4 text-center text-sm text-gray-600">-</td>
-                  <td className="px-6 py-4 text-center text-sm text-gray-600">-</td>
-                  <td className="px-6 py-4 text-center text-sm text-green-600 font-semibold">17% Off</td>
+                  <td className="px-6 py-4 text-sm text-gray-900">Priority Support</td>
+                  <td className="px-6 py-4 text-center text-sm text-gray-600">{PRICING_PLANS.free.limits.prioritySupport ? '✓' : '-'}</td>
+                  <td className="px-6 py-4 text-center text-sm text-gray-600">{PRICING_PLANS.pro.limits.prioritySupport ? '✓' : '-'}</td>
+                  <td className="px-6 py-4 text-center text-sm text-gray-600">{PRICING_PLANS.premium.limits.prioritySupport ? '✓' : '-'}</td>
                 </tr>
               </tbody>
             </table>

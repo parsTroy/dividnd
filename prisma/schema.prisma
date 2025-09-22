@@ -55,6 +55,7 @@ model User {
   accounts      Account[]
   sessions      Session[]
   portfolios    Portfolio[]
+  subscription  Subscription?
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
 }
@@ -121,4 +122,28 @@ model DividendData {
 
   @@index([symbol])
   @@index([lastUpdated])
+}
+
+// Subscription management
+model Subscription {
+  id                String    @id @default(cuid())
+  userId            String    @unique
+  user              User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  stripeCustomerId  String?   @unique
+  stripeSubscriptionId String? @unique
+  stripePriceId     String?
+  stripeProductId   String?
+  status            String    // 'active', 'canceled', 'incomplete', 'incomplete_expired', 'past_due', 'trialing', 'unpaid'
+  currentPeriodStart DateTime?
+  currentPeriodEnd   DateTime?
+  cancelAtPeriodEnd  Boolean   @default(false)
+  canceledAt         DateTime?
+  trialStart         DateTime?
+  trialEnd           DateTime?
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
+
+  @@index([userId])
+  @@index([stripeCustomerId])
+  @@index([stripeSubscriptionId])
 }

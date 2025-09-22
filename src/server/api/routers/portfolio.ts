@@ -1,9 +1,11 @@
 import { z } from "zod";
+import { TRPCError } from "@trpc/server";
 
 import {
   createTRPCRouter,
   protectedProcedure,
 } from "~/server/api/trpc";
+import { getUserSubscription } from "~/lib/subscription";
 
 export const portfolioRouter = createTRPCRouter({
   // Get all portfolios for the current user
@@ -64,10 +66,19 @@ export const portfolioRouter = createTRPCRouter({
   create: protectedProcedure
     .input(z.object({ name: z.string().min(1).max(100) }))
     .mutation(async ({ ctx, input }) => {
-      // Check if this is the user's first portfolio
+      // Check subscription limits
+      const subscription = await getUserSubscription(ctx.session.user.id);
       const existingPortfolios = await ctx.db.portfolio.count({
         where: { userId: ctx.session.user.id }
       });
+
+      // Check if user has reached portfolio limit
+      if (subscription.limits.portfolios !== -1 && existingPortfolios >= subscription.limits.portfolios) {
+        throw new TRPCError({
+          code: 'FORBIDDEN',
+          message: `You have reached the maximum number of portfolios (${subscription.limits.portfolios}). Upgrade your plan to create more portfolios.`,
+        });
+      }
 
       return ctx.db.portfolio.create({
         data: {

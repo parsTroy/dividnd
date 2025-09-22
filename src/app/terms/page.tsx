@@ -119,12 +119,9 @@ export default function TermsPage() {
                 <p className="text-gray-700 mb-4">
                   If you have any questions about these Terms of Service, please contact us at:
                 </p>
-                <div className="bg-gray-50 p-4 rounded-lg">
-                  <p className="text-gray-700">
-                    <strong>Email:</strong> legal@dividnd.com<br />
-                    <strong>Address:</strong> 123 Financial District, Suite 100, New York, NY 10004
-                  </p>
-                </div>
+                <p className="text-gray-700 mb-4">
+                  <strong>Email:</strong> support@dividnd.com
+                </p>
               </section>
             </div>
           </div>

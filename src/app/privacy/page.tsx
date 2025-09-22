@@ -182,9 +182,7 @@ export default function PrivacyPage() {
                 </p>
                 <div className="bg-gray-50 p-4 rounded-lg">
                   <p className="text-gray-700">
-                    <strong>Email:</strong> privacy@dividnd.com<br />
-                    <strong>Data Protection Officer:</strong> dpo@dividnd.com<br />
-                    <strong>Address:</strong> 123 Financial District, Suite 100, New York, NY 10004
+                    <strong>Email:</strong> support@dividnd.com
                   </p>
                 </div>
               </section>

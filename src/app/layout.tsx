@@ -15,7 +15,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: "Dividnd - Build Wealth Through Dividend Investing",
     description: "Professional dividend portfolio tracking with real-time analytics, income optimization, and advanced portfolio management tools.",
-    url: "https://dividnd.com",
+    url: "https://www.dividnd.com",
     siteName: "Dividnd",
     images: [
       {

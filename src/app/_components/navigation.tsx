@@ -17,18 +17,18 @@ export function Navigation() {
         <div className="flex justify-between h-16">
           <div className="flex items-center">
             <Link href="/portfolio" className="flex-shrink-0 flex items-center">
-              <span className="text-2xl font-bold text-[var(--color-primary-600)]">Dividnd</span>
+              <span className="text-2xl font-bold text-primary-600">Dividnd</span>
             </Link>
             <div className="ml-10 flex items-baseline space-x-4">
               <Link
                 href="/portfolio"
-                className="text-gray-900 hover:text-[var(--color-primary-600)] px-3 py-2 rounded-md text-sm font-medium transition-colors"
+                className="text-gray-900 hover:text-primary-600 px-3 py-2 rounded-md text-sm font-medium transition-colors"
               >
                 Portfolio
               </Link>
               <Link
                 href="/calculator"
-                className="text-gray-900 hover:text-[var(--color-primary-600)] px-3 py-2 rounded-md text-sm font-medium transition-colors"
+                className="text-gray-900 hover:text-primary-600 px-3 py-2 rounded-md text-sm font-medium transition-colors"
               >
                 Calculator
               </Link>

@@ -55,7 +55,7 @@ export default function SignInPage() {
               </div>
             </div>
           </Link>
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Welcome to <span className="text-[var(--color-primary-600)]">Dividnd</span></h1>
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">Welcome to <span className="text-primary-600">Dividnd</span></h1>
           <p className="text-gray-600">Track your dividend portfolio and build wealth through passive income</p>
         </div>
 

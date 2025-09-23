@@ -14,7 +14,7 @@ export function LandingPage({ isAuthenticated, userName }: LandingPageProps) {
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
             <div className="text-center">
               <h1 className="heading-1">
-                Welcome back, <span className="text-[var(--color-primary-600)]">{userName}</span>
+                Welcome back, <span className="text-primary-600">{userName}</span>
               </h1>
               <p className="mt-6 body-large max-w-3xl mx-auto">
                 Ready to track your dividend investments and build wealth through passive income?
@@ -24,11 +24,11 @@ export function LandingPage({ isAuthenticated, userName }: LandingPageProps) {
             <div className="mt-12 grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-3">
               <Link
                 href="/portfolio"
-                className="card group p-8 hover:border-[var(--color-primary-300)]"
+                className="card group p-8 hover:border-primary-300"
               >
                 <div className="flex items-center mb-4">
-                  <div className="w-12 h-12 bg-[var(--color-primary-100)] rounded-lg flex items-center justify-center group-hover:bg-[var(--color-primary-200)] transition-colors">
-                    <svg className="w-6 h-6 text-[var(--color-primary-600)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <div className="w-12 h-12 bg-primary-100 rounded-lg flex items-center justify-center group-hover:bg-primary-200 transition-colors">
+                    <svg className="w-6 h-6 text-primary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
                     </svg>
                   </div>
@@ -41,11 +41,11 @@ export function LandingPage({ isAuthenticated, userName }: LandingPageProps) {
 
               <Link
                 href="/portfolio"
-                className="card group p-8 hover:border-[var(--color-success-300)]"
+                className="card group p-8 hover:border-green-300"
               >
                 <div className="flex items-center mb-4">
-                  <div className="w-12 h-12 bg-[var(--color-success-100)] rounded-lg flex items-center justify-center group-hover:bg-[var(--color-success-200)] transition-colors">
-                    <svg className="w-6 h-6 text-[var(--color-success-600)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center group-hover:bg-green-200 transition-colors">
+                    <svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
                     </svg>
                   </div>
@@ -58,11 +58,11 @@ export function LandingPage({ isAuthenticated, userName }: LandingPageProps) {
 
               <Link
                 href="/calculator"
-                className="card group p-8 hover:border-[var(--color-financial-accent)]"
+                className="card group p-8 hover:border-purple-300"
               >
                 <div className="flex items-center mb-4">
                   <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center group-hover:bg-purple-200 transition-colors">
-                    <svg className="w-6 h-6 text-[var(--color-financial-accent)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg className="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
                     </svg>
                   </div>
@@ -96,7 +96,7 @@ export function LandingPage({ isAuthenticated, userName }: LandingPageProps) {
           <div className="text-center">
             <h1 className="heading-1">
               Build Wealth Through
-              <span className="text-[var(--color-primary-600)]"> Dividend Investing</span>
+              <span className="text-primary-600"> Dividend Investing</span>
             </h1>
             <p className="mt-6 body-large max-w-3xl mx-auto">
               Track your dividend portfolio, calculate expected income, and maximize your passive income investments with professional-grade analytics.
@@ -136,8 +136,8 @@ export function LandingPage({ isAuthenticated, userName }: LandingPageProps) {
 
           <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-3">
             <div className="card p-8">
-              <div className="w-12 h-12 bg-[var(--color-primary-100)] rounded-lg flex items-center justify-center mb-6">
-                <svg className="w-6 h-6 text-[var(--color-primary-600)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <div className="w-12 h-12 bg-primary-100 rounded-lg flex items-center justify-center mb-6">
+                <svg className="w-6 h-6 text-primary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
                 </svg>
               </div>
@@ -148,8 +148,8 @@ export function LandingPage({ isAuthenticated, userName }: LandingPageProps) {
             </div>
 
             <div className="card p-8">
-              <div className="w-12 h-12 bg-[var(--color-success-100)] rounded-lg flex items-center justify-center mb-6">
-                <svg className="w-6 h-6 text-[var(--color-success-600)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center mb-6">
+                <svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
                 </svg>
               </div>
@@ -161,7 +161,7 @@ export function LandingPage({ isAuthenticated, userName }: LandingPageProps) {
 
             <div className="card p-8">
               <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center mb-6">
-                <svg className="w-6 h-6 text-[var(--color-financial-accent)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
                 </svg>
               </div>
@@ -172,8 +172,8 @@ export function LandingPage({ isAuthenticated, userName }: LandingPageProps) {
             </div>
 
             <div className="card p-8">
-              <div className="w-12 h-12 bg-[var(--color-warning-100)] rounded-lg flex items-center justify-center mb-6">
-                <svg className="w-6 h-6 text-[var(--color-financial-highlight)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <div className="w-12 h-12 bg-yellow-100 rounded-lg flex items-center justify-center mb-6">
+                <svg className="w-6 h-6 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
                 </svg>
               </div>
@@ -196,8 +196,8 @@ export function LandingPage({ isAuthenticated, userName }: LandingPageProps) {
             </div>
 
             <div className="card p-8">
-              <div className="w-12 h-12 bg-[var(--color-error-100)] rounded-lg flex items-center justify-center mb-6">
-                <svg className="w-6 h-6 text-[var(--color-error-600)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <div className="w-12 h-12 bg-red-100 rounded-lg flex items-center justify-center mb-6">
+                <svg className="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
                 </svg>
               </div>
@@ -211,7 +211,7 @@ export function LandingPage({ isAuthenticated, userName }: LandingPageProps) {
       </div>
 
       {/* CTA Section */}
-      <div className="bg-[var(--color-primary-600)]">
+      <div className="bg-primary-600">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
           <div className="text-center">
             <h2 className="heading-2 text-white">
@@ -223,7 +223,7 @@ export function LandingPage({ isAuthenticated, userName }: LandingPageProps) {
             <div className="mt-8">
               <Link
                 href="/signin"
-                className="inline-flex items-center justify-center px-8 py-4 border border-transparent text-base font-medium rounded-lg text-[var(--color-primary-600)] bg-white hover:bg-gray-50 transition-colors"
+                className="inline-flex items-center justify-center px-8 py-4 border border-transparent text-base font-medium rounded-lg text-primary-600 bg-white hover:bg-gray-50 transition-colors"
               >
                 Get Started Free
               </Link>

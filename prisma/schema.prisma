@@ -1,7 +1,6 @@
 // This is your Prisma schema file,
 // learn more about it in the docs: https://pris.ly/d/prisma-schema
 
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -10,6 +9,7 @@ datasource db {
   provider  = "postgresql"
   url       = env("DATABASE_URL")
   directUrl = env("DIRECT_URL")
+  schemas   = ["dividnd"]
 }
 
 // Necessary for Next auth
@@ -30,6 +30,8 @@ model Account {
     refresh_token_expires_in Int?
 
     @@unique([provider, providerAccountId])
+    @@map("Account")
+    @@schema("dividnd")
 }
 
 model Session {
@@ -38,6 +40,9 @@ model Session {
     userId       String
     expires      DateTime
     user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+    @@map("Session")
+    @@schema("dividnd")
 }
 
 model VerificationToken {
@@ -46,6 +51,8 @@ model VerificationToken {
     expires    DateTime
 
     @@unique([identifier, token])
+    @@map("VerificationToken")
+    @@schema("dividnd")
 }
 
 model User {
@@ -60,6 +67,9 @@ model User {
   subscription  Subscription?
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
+
+  @@map("User")
+  @@schema("dividnd")
 }
 
 model Portfolio {
@@ -76,6 +86,8 @@ model Portfolio {
 
   @@index([userId])
   @@index([userId, isMain])
+  @@map("Portfolio")
+  @@schema("dividnd")
 }
 
 model Position {
@@ -90,6 +102,9 @@ model Position {
   dividendYield   Float?    // Manual input for MVP
   createdAt       DateTime  @default(now())
   updatedAt       DateTime  @updatedAt
+
+  @@map("Position")
+  @@schema("dividnd")
 }
 
 // Cached stock data to avoid redundant API calls
@@ -107,6 +122,8 @@ model StockData {
 
   @@index([symbol])
   @@index([lastUpdated])
+  @@map("StockData")
+  @@schema("dividnd")
 }
 
 // Cached dividend data
@@ -124,6 +141,8 @@ model DividendData {
 
   @@index([symbol])
   @@index([lastUpdated])
+  @@map("DividendData")
+  @@schema("dividnd")
 }
 
 // Subscription management
@@ -148,6 +167,8 @@ model Subscription {
   @@index([userId])
   @@index([stripeCustomerId])
   @@index([stripeSubscriptionId])
+  @@map("Subscription")
+  @@schema("dividnd")
 }
 
 // Newsletter subscriptions
@@ -165,4 +186,6 @@ model NewsletterSubscription {
   @@index([email])
   @@index([confirmationToken])
   @@index([discountCode])
+  @@map("NewsletterSubscription")
+  @@schema("dividnd")
 }
